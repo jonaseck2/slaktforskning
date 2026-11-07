@@ -449,25 +449,30 @@ export async function importGedcom(db: Database, tree: GedcomNode[], options?: I
   const evBeforeRows         = await queryAll<{ event_type: string; cnt: number }>(db, 'SELECT event_type, COUNT(*) as cnt FROM events GROUP BY event_type');
   const evBefore             = new Map<string, number>(evBeforeRows.map(r => [r.event_type, r.cnt]));
 
-  const version = detectGedcomVersion(tree);
-  const normalizedTree = normalizeForImport(tree, version);
-
   const { proxy: cachedDb, finalize: finalizeCache } = withStatementCache(db);
-  // Accounting spans the whole phase run. Opened here and closed in the `finally`
-  // below so a throwing phase cannot strand the session and make the *next*
-  // import fail with "a session is already active".
+  // Accounting spans detect, normalize and the whole phase run. Opened first and
+  // closed in the `finally` below so a throw anywhere (normalize included) cannot
+  // strand the session and make the *next* import fail with "a session is
+  // already active". The gate walks the parsed `tree`: normalize records which
+  // parsed node each derived node came from, so marks on the normalized tree
+  // reach the parsed one.
   let unaccountedFor: UnaccountedTag[] = [];
-  beginAccounting();
-  await runSql(db, 'BEGIN');
+  let version: GedcomVersion = 'unknown';
   let partial: { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; namelessPersonCount: number; firstPersonId: string | null; submitterNames: string[]; submitterContact: { address?: string; phone?: string; email?: string } | null; groupLinkWarnings: string[] };
+  beginAccounting();
   try {
-    partial = await doImportGedcom(cachedDb, normalizedTree, options, tree);
-    await runSql(db, 'COMMIT');
-  } catch (err) {
-    await runSql(db, 'ROLLBACK');
-    throw err;
+    version = detectGedcomVersion(tree);
+    const normalizedTree = normalizeForImport(tree, version);
+    await runSql(db, 'BEGIN');
+    try {
+      partial = await doImportGedcom(cachedDb, normalizedTree, options, tree);
+      await runSql(db, 'COMMIT');
+    } catch (err) {
+      await runSql(db, 'ROLLBACK');
+      throw err;
+    }
   } finally {
-    unaccountedFor = collectUnaccounted(normalizedTree, endAccounting());
+    unaccountedFor = collectUnaccounted(tree, endAccounting());
     finalizeCache(); // free all compiled statements from the WASM heap
     await runSql(db, 'PRAGMA shrink_memory'); // release SQLite page cache back to WASM heap
   }

@@ -748,7 +748,7 @@ describe('GEDCOM 5.5.1 import — full ImportReport field coverage', async () =>
   it('report.version reflects the GEDCOM version header', async () => {
     const db = await createTestDb();
     const report = await importGedcom(db, parseGedcom(FULL_GED));
-    // GedcomVersion is a string type: '5.5.1' | '5.5.5' | '7.0' | 'unknown'
+    // GedcomVersion is the declared HEAD.GEDC.VERS string (major 5 or 7), or 'unknown'
     expect(report.version).toBe('5.5.1');
   });
 });

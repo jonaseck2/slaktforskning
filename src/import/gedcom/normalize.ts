@@ -5,11 +5,11 @@
  * the shared import-core can handle both versions without branching.
  *
  * All transformations operate on the parsed GedcomNode[] tree in memory.
- * Returns the original nodes unchanged for non-7.0 versions.
+ * Returns the original nodes unchanged unless the major version is 7.
  */
 
 import type { GedcomNode } from '../../gedcom/parser';
-import type { GedcomVersion } from './detect';
+import { gedcomMajor, type GedcomVersion } from './detect';
 import { getChild } from './node-utils';
 import { markConsumed, recordOrigin } from './tag-accounting';
 
@@ -215,10 +215,11 @@ function mergeMultipleGivnSurn(node: GedcomNode): GedcomNode {
 
 /**
  * Normalize a parsed GEDCOM node tree from 7.0 conventions to 5.5.1-compatible form.
- * Returns the input unchanged for non-7.0 versions.
+ * Returns the input unchanged unless the major version is 7 (semver: 7.0.x and
+ * 7.1 are compatible with 7.0, see `detect.ts`).
  */
 export function normalizeForImport(nodes: GedcomNode[], version: GedcomVersion): GedcomNode[] {
-  if (version !== '7.0') return nodes;
+  if (gedcomMajor(version) !== 7) return nodes;
 
   // 1. Build SNOTE map and remove top-level SNOTE records
   const snoteMap = buildSnoteMap(nodes);

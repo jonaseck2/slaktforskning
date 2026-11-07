@@ -6,7 +6,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
 import type { GedcomNode } from '../../src/gedcom/parser';
@@ -17,9 +17,28 @@ import {
   recordOrigin,
   originOf,
 } from '../../src/import/gedcom/tag-accounting';
-import { detectGedcomVersion } from '../../src/import/gedcom/detect';
+import { detectGedcomVersion, gedcomMajor } from '../../src/import/gedcom/detect';
 import { normalizeForImport } from '../../src/import/gedcom/normalize';
+import { matchDeclared } from '../../src/import/gedcom/accounting-declared';
+import { queryAll } from '../../src/api/db';
 import { createTestDb } from './helpers';
+
+// Review Focus 4: a throwing normalize must not strand the accounting session.
+// The flag makes the real normalizeForImport throw once, on the next call.
+const normalizeFault = vi.hoisted(() => ({ throwNext: false }));
+vi.mock('../../src/import/gedcom/normalize', async (importOriginal) => {
+  const real = await importOriginal<typeof import('../../src/import/gedcom/normalize')>();
+  return {
+    ...real,
+    normalizeForImport: (...args: Parameters<typeof real.normalizeForImport>) => {
+      if (normalizeFault.throwNext) {
+        normalizeFault.throwNext = false;
+        throw new Error('injected normalize failure');
+      }
+      return real.normalizeForImport(...args);
+    },
+  };
+});
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 const FIXTURES = join(HERE, '../fixtures/gedcom');
@@ -48,13 +67,19 @@ describe('normalize-boundary accounting', () => {
     expect(paths, 'SNOTE.LANG is read by phases/notes.ts').not.toContain('SNOTE.LANG');
   });
 
-  // T04 flips this to '7.0' on purpose, when detect.ts applies semver by major.
-  // The plan named dialects/family-historian.ged as the 7.0.x example, but that
-  // file declares GEDC.VERS 5.5.1 (7.0.13 is its SOUR.VERS), so it detects as
-  // 5.5.1 and never reaches normalize. An inline file pins the real behaviour.
-  it('the pre-existing 7.0.x behaviour is pinned', () => {
+  // Replaces the T01 pinned-behaviour test. detect.ts applies semver by major, so a
+  // 7.0.x patch file reaches normalize and its shared-note translation is reported.
+  it('an inline GEDC.VERS 7.0.13 file has major 7 and declared version 7.0.13', async () => {
     const text = SNOTE_PROBE.replace('2 VERS 7.0', '2 VERS 7.0.13');
-    expect(detectGedcomVersion(parseGedcom(text))).toBe('unknown');
+    const version = detectGedcomVersion(parseGedcom(text));
+    expect(version).toBe('7.0.13');
+    expect(gedcomMajor(version)).toBe(7);
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(text));
+    expect(report.version).toBe('7.0.13');
+    const paths = (report.unaccountedFor ?? []).map(u => u.path);
+    expect(paths).toContain('SNOTE.TRAN');
+    expect(paths).toContain('SNOTE.TRAN.LANG');
   });
 
   // Verification 3: 5.5.1 is stable. The raw list equals the pinned baseline
@@ -279,5 +304,113 @@ describe('accounting provenance', () => {
     const b = node('B');
     expect(() => recordOrigin(a, b)).not.toThrow();
     expect(originOf(a)).toBe(a);
+  });
+});
+
+// T04: detect.ts follows semver. Same major is compatible, a new major is not.
+describe('detectGedcomVersion follows semver', () => {
+  const detect = (vers: string) => detectGedcomVersion(parseGedcom(`0 HEAD\n1 GEDC\n2 VERS ${vers}\n0 TRLR`));
+
+  const SUPPORTED: [string, number][] = [
+    ['7.0', 7], ['7.0.13', 7], ['7.1', 7], ['7.2.3', 7],
+    ['5.0', 5], ['5.5', 5], ['5.5.1', 5], ['5.5.5', 5], ['5.6', 5],
+  ];
+  for (const [vers, major] of SUPPORTED) {
+    it(`${vers} → declared string, major ${major}`, () => {
+      expect(detect(vers)).toBe(vers);
+      expect(gedcomMajor(detect(vers))).toBe(major);
+    });
+  }
+
+  for (const vers of ['4.0', '6.0', '8.0', '8.1.2', '10.0']) {
+    it(`${vers} → unknown (unsupported major)`, () => {
+      expect(detect(vers)).toBe('unknown');
+      expect(gedcomMajor(detect(vers))).toBeNull();
+    });
+  }
+
+  for (const vers of ['7', '7.', '7.x', '70.0', '5.5.5.1', '']) {
+    it(`'${vers}' → unknown (malformed)`, () => {
+      expect(detect(vers)).toBe('unknown');
+    });
+  }
+
+  it('surrounding whitespace is trimmed', () => {
+    expect(detect('  7.0.13  ')).toBe('7.0.13');
+  });
+});
+
+describe('normalizeForImport keys on the major version', () => {
+  const tree = () => parseGedcom('0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @I1@ INDI\n1 FAMC @F1@\n2 PEDI BIRTH\n0 TRLR');
+  const pedi = (nodes: GedcomNode[]) =>
+    nodes.find(n => n.xref === '@I1@')?.children.find(c => c.tag === 'FAMC')?.children.find(c => c.tag === 'PEDI')?.value;
+
+  for (const v of ['7.0.13', '7.1']) {
+    it(`transforms for ${v}`, () => {
+      expect(pedi(normalizeForImport(tree(), v))).toBe('birth');
+    });
+  }
+  for (const v of ['5.5', '5.5.5', 'unknown']) {
+    it(`is a no-op for ${v}`, () => {
+      const input = tree();
+      expect(normalizeForImport(input, v)).toBe(input);
+    });
+  }
+});
+
+describe('session lifecycle and pointer edge cases (T04)', () => {
+  it('a throwing normalize does not strand the session', async () => {
+    normalizeFault.throwNext = true;
+    await expect(importGedcom(await createTestDb(), parseGedcom(SNOTE_PROBE))).rejects.toThrow('injected normalize failure');
+    const report = await importGedcom(await createTestDb(), parseGedcom(SNOTE_PROBE));
+    expect(report.persons).toBe(1);
+  });
+
+  it('dangling SNOTE pointer imports without a crash', async () => {
+    const text = '0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @I1@ INDI\n1 NAME Anna /Berg/\n1 SNOTE @N9@\n0 TRLR\n';
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(text));
+    expect(report.persons).toBe(1);
+    // Measured 2026-11-07: normalize derives an empty NOTE from the pointer and the
+    // individuals phase reads it, so INDI.SNOTE is marked through provenance. No
+    // notes row is written. The dangling target is not itself named in the report.
+    expect((report.unaccountedFor ?? []).map(u => u.path)).toEqual(['TRLR']);
+    expect(await queryAll(db, 'SELECT id FROM notes')).toEqual([]);
+  });
+});
+
+describe('the 7.0 fixture after T04', () => {
+  const fixture = () => parseGedcom(readFileSync(join(FIXTURES, 'gedcom7-normalize.ged'), 'utf-8'));
+
+  // Review Focus 5. Measured 2026-11-07 after T04:
+  //   INDI.SNOTE       marked (phaseNoteLinks reads the pointer on the parsed tree)
+  //   INDI.BIRT.SNOTE  marked (the event phase reads the inlined NOTE; provenance
+  //                    carries the mark to the pointer)
+  //   FAM.SNOTE        reported. No phase reads a FAM-level NOTE, and phaseNoteLinks
+  //                    skips FAM, so the pointer is named in the report.
+  it('event-level and FAM-level SNOTE pointers are marked or reported, never silent', async () => {
+    const report = await importGedcom(await createTestDb(), fixture());
+    const paths = new Set((report.unaccountedFor ?? []).map(u => u.path));
+    expect([...paths].filter(p => p.endsWith('SNOTE')).sort()).toEqual(['FAM.SNOTE']);
+    expect(paths.has('INDI.SNOTE')).toBe(false);
+    expect(paths.has('INDI.BIRT.SNOTE')).toBe(false);
+  });
+
+  // Verification 4. T05 declares these. Until then the fixture gate stays red on them.
+  it('7.0 fixture: every node a phase reads is marked', async () => {
+    const report = await importGedcom(await createTestDb(), fixture());
+    const undeclared = (report.unaccountedFor ?? [])
+      .filter(u => !matchDeclared(u.path))
+      .map(u => `${u.count} ${u.path}`)
+      .sort();
+    // Measured 2026-11-07. Each is a node no phase reads, not a false positive:
+    // DEAT.DATE.PHRASE was dropped because the DATE had a value (Review Focus 1).
+    expect(undeclared).toEqual([
+      '1 FAM.SNOTE',
+      '1 INDI.DEAT.DATE.PHRASE',
+      '1 INDI.EXID._SRC',
+      '1 SNOTE.TRAN',
+      '1 SNOTE.TRAN.LANG',
+    ]);
   });
 });

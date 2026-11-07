@@ -11,6 +11,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
 import { matchDeclared } from '../../src/import/gedcom/accounting-declared';
+import { detectGedcomVersion, gedcomMajor } from '../../src/import/gedcom/detect';
 import { queryAll } from '../../src/api/db';
 import { createTestDb, readDialect } from './helpers';
 
@@ -178,15 +179,9 @@ describe('every shipped fixture is fully accounted for', () => {
   });
 
   // Verification 2: the gate reaches normalize. At least one gated fixture must
-  // be GEDCOM 7.0, or normalize.ts is never exercised by this suite. Uses a local
-  // parse of the declared VERS until T04 adds gedcomMajor.
+  // be GEDCOM 7, or normalize.ts is never exercised by this suite.
   it('the corpus contains a GEDCOM 7 fixture, so the gate reaches normalize', () => {
-    // HEAD > GEDC > VERS only. A bare level-2 VERS also matches SOUR.VERS.
-    const major = (file: string): number => {
-      const head = parseGedcom(readFileSync(file, 'utf-8')).find(n => n.tag === 'HEAD');
-      const vers = head?.children.find(n => n.tag === 'GEDC')?.children.find(n => n.tag === 'VERS');
-      return vers ? parseInt(vers.value, 10) : NaN;
-    };
+    const major = (file: string) => gedcomMajor(detectGedcomVersion(parseGedcom(readFileSync(file, 'utf-8'))));
     expect(fixtureFiles().some(f => major(f) === 7)).toBe(true);
   });
 
