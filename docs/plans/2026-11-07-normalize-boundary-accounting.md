@@ -99,7 +99,7 @@ Other readers outside the phases: `detect.ts` (reads `HEAD.GEDC.VERS` with raw `
 
 - Modify `src/import/gedcom/tag-accounting.ts`: provenance map, `recordOrigin`, chain-following `markConsumed`.
 - Modify `src/import/gedcom/normalize.ts`: remove the private `getChild`/`getChildren`, add `derive`, record provenance in every rebuild.
-- Modify `src/import/gedcom/detect.ts`: read through `node-utils`, and treat every the declared version string, supported by major (5 and 7) per semver, and add `gedcomMajor`.
+- Modify `src/import/gedcom/detect.ts`: read through `node-utils`, return the version string the file declares, accept it by major (5 and 7) per semver, and add `gedcomMajor`.
 - Modify `src/import/gedcom/import-core.ts` (about line 452-472): open the session earlier, walk the original tree.
 - Modify `src/import/gedcom/phases/notes.ts:46-50`: mark the SNOTE record.
 - Modify `src/import/gedcom/accounting-declared.ts`: declarations.

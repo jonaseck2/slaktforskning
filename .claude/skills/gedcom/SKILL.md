@@ -325,6 +325,12 @@ The source linker (`src/api/source-linker.ts`) auto-detects these patterns and r
 - Removes `CONC` line concatenation
 - Typed relationships (GEDCOM 7.0 uses enumerated `PEDI` values for parent-child)
 
+**Import mechanics for 7.0** (`src/import/gedcom/detect.ts`, `normalize.ts`, `tag-accounting.ts`):
+- Version detection is by major per semver: `SUPPORTED_MAJORS` is 5 and 7, `gedcomMajor` returns the major, and the import report shows the version string the file declares (`7.0.13` reads `GEDCOM 7.0.13`).
+- `normalize.ts` rebuilds the tree before the phases run. Every node it rebuilds must go through `derive()`, so accounting follows it back to the parsed node.
+- Marking a node before a phase reads it is forbidden. Where normalize drops what it reads (PHRASE, duplicate GIVN/SURN, EXID children other than TYPE), use a plain `.find` and not `getChild`.
+- The accounting gate walks the PARSED tree, not the normalized one. A node normalize drops and no phase reads is reported.
+
 ## Parsing GEDCOM
 
 A minimal line-by-line parser:
