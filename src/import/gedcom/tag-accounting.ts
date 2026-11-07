@@ -17,12 +17,15 @@
 import type { GedcomNode } from '../../gedcom/parser';
 
 let session: Set<GedcomNode> | null = null;
+// derived node -> root parsed node. Created and dropped with the session.
+let provenance: WeakMap<GedcomNode, GedcomNode> | null = null;
 
 export function beginAccounting(): void {
   if (session !== null) {
     throw new Error('tag accounting: a session is already active — imports must not overlap');
   }
   session = new Set();
+  provenance = new WeakMap();
 }
 
 export function endAccounting(): Set<GedcomNode> {
@@ -31,6 +34,7 @@ export function endAccounting(): Set<GedcomNode> {
   }
   const collected = session;
   session = null;
+  provenance = null;
   return collected;
 }
 
@@ -38,7 +42,24 @@ export function isAccounting(): boolean {
   return session !== null;
 }
 
-/** No-op when no session is active, so callers never need to check. */
+/**
+ * Record that `derived` was built from `origin` (a normalizer's copy of a parsed
+ * node). Stores the root origin, so a chain of derivations never grows and
+ * `markConsumed` needs one lookup. No-op outside a session.
+ */
+export function recordOrigin(derived: GedcomNode, origin: GedcomNode): void {
+  provenance?.set(derived, provenance.get(origin) ?? origin);
+}
+
+/** The parsed node `node` came from, or `node` itself when none is recorded. */
+export function originOf(node: GedcomNode): GedcomNode {
+  return provenance?.get(node) ?? node;
+}
+
+/** No-op when no session is active, so callers never need to check. Also marks the origin. */
 export function markConsumed(node: GedcomNode): void {
-  session?.add(node);
+  if (session === null) return;
+  session.add(node);
+  const origin = provenance?.get(node);
+  if (origin !== undefined) session.add(origin);
 }

@@ -9,6 +9,14 @@ import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
+import type { GedcomNode } from '../../src/gedcom/parser';
+import {
+  beginAccounting,
+  endAccounting,
+  markConsumed,
+  recordOrigin,
+  originOf,
+} from '../../src/import/gedcom/tag-accounting';
 import { detectGedcomVersion } from '../../src/import/gedcom/detect';
 import { createTestDb } from './helpers';
 
@@ -66,4 +74,60 @@ describe('normalize-boundary accounting', () => {
       expect(actual).toEqual(expected.filter(e => !NOW_READ.has(e.path)));
     });
   }
+});
+
+describe('accounting provenance', () => {
+  const node = (tag: string): GedcomNode => ({ level: 0, xref: null, tag, value: '', children: [] });
+
+  it('marking a derived node marks its origin', () => {
+    const origin = node('TRAN');
+    const derived = node('TRAN');
+    beginAccounting();
+    try {
+      recordOrigin(derived, origin);
+      markConsumed(derived);
+    } finally {
+      var consumed = endAccounting();
+    }
+    expect(consumed.has(derived)).toBe(true);
+    expect(consumed.has(origin)).toBe(true);
+  });
+
+  it('a node derived twice marks the parsed origin once', () => {
+    const origin = node('NAME');
+    const mid = node('NAME');
+    const last = node('NAME');
+    beginAccounting();
+    try {
+      recordOrigin(mid, origin);
+      recordOrigin(last, mid);
+      expect(originOf(last)).toBe(origin);
+      markConsumed(last);
+    } finally {
+      var consumed = endAccounting();
+    }
+    expect(consumed.has(origin)).toBe(true);
+    expect(consumed.has(last)).toBe(true);
+    expect(consumed.has(mid)).toBe(false);
+  });
+
+  it('a derived node with no recordOrigin leaves the origin unmarked', () => {
+    const origin = node('TRAN');
+    const derived = node('TRAN');
+    beginAccounting();
+    try {
+      markConsumed(derived);
+    } finally {
+      var consumed = endAccounting();
+    }
+    expect(consumed.has(derived)).toBe(true);
+    expect(consumed.has(origin)).toBe(false);
+  });
+
+  it('recordOrigin outside a session is a no-op and does not throw', () => {
+    const a = node('A');
+    const b = node('B');
+    expect(() => recordOrigin(a, b)).not.toThrow();
+    expect(originOf(a)).toBe(a);
+  });
 });
