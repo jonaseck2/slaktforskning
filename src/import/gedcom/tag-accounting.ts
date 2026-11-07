@@ -13,6 +13,9 @@
  * One session at a time. `beginAccounting` throws on re-entry rather than merging
  * two imports' node sets, which would let a concurrent import mask a real drop.
  * The multi-file import queue is sequential by design for this reason.
+ *
+ * Provenance (derived node -> parsed node, see `recordOrigin`) shares the session's
+ * lifetime: it is created in `beginAccounting` and released in `endAccounting`.
  */
 import type { GedcomNode } from '../../gedcom/parser';
 
@@ -21,7 +24,9 @@ let session: Set<GedcomNode> | null = null;
 // A plain Map, not a WeakMap: WeakMap writes cost about 3x more in V8, and at
 // 20 000 persons they added 1.1 s to an import. recordOrigin deletes the entry
 // of an intermediate node once it is derived again, so the map holds at most one
-// entry per node of the final normalized tree, which the import holds anyway.
+// entry per final node, plus one per derived node a later pass dropped (CONC,
+// duplicate GIVN/SURN, EXID children other than TYPE). All of it is released in
+// endAccounting.
 let provenance: Map<GedcomNode, GedcomNode> | null = null;
 
 export function beginAccounting(): void {

@@ -18,7 +18,7 @@ import { markConsumed, recordOrigin } from './tag-accounting';
 /**
  * Every node this module builds goes through `derive`, so marking the copy marks
  * the parsed node it came from (`CLAUDE.md` Prime Directive (cont.) clause 1).
- * O(1): one spread and one WeakMap write.
+ * O(1): one spread and one Map write.
  */
 function derive(origin: GedcomNode, patch: Partial<GedcomNode>): GedcomNode {
   const result = { ...origin, ...patch };
@@ -79,7 +79,8 @@ function convertExidToRefn(node: GedcomNode): GedcomNode {
   const newChildren: GedcomNode[] = [];
   for (const child of node.children) {
     if (child.tag === 'EXID') {
-      const typeNode = getChild(child, 'TYPE');
+      // Plain find: getChild would mark EXID.TYPE here, before any phase reads REFN.TYPE.
+      const typeNode = child.children.find(c => c.tag === 'TYPE');
       const refnChildren: GedcomNode[] = [];
       if (typeNode) {
         refnChildren.push(derive(typeNode, {
