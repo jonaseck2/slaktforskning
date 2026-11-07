@@ -70,7 +70,7 @@
     "@types/lunr": "^2.3.7",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "fflate": "^0.8.3",
-    "kkrpc": "^2.0.0",
+    "kkrpc": "^2.1.0",
     "leaflet": "^1.9.4",
     "lunr": "^2.3.9",
     "nanotar": "^0.3.0",
