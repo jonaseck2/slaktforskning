@@ -62,7 +62,7 @@ Other readers outside the phases: `detect.ts` (reads `HEAD.GEDC.VERS` with raw `
 
 - **Verbatim capture (spec Part C) is out of scope.** It depends on this plan, because capture reads the same unaccounted set. Owner: a plan written from Part C after this one archives.
 - **Modelling shared-note translations is out of scope.** `SNOTE.TRAN` is declared `unmapped:pending-unmapped-capture`, the existing home for authored data awaiting capture. A `note_translations` table would be a separate plan with its own registry entries.
-- **`detect.ts` rejects `VERS 7.0.x`.** A file saying `7.0.13` is never normalized, so its SNOTE pointers are not inlined at all. This is load-bearing for the user goal, but the fix changes DB output for `family-historian.ged` and for real 7.0.1+ files. It needs its own plan with an import-output diff. **Flagged for the user in the hand-off, not fixed here.** T01 pins the current behaviour with a test named for it, so the later fix has to flip that test on purpose.
+- **`detect.ts` rejects `VERS 7.0.x` — in scope, fixed in T04.** A file saying `7.0.13` was never normalized, so its SNOTE pointers were not inlined. The user decided the rule (2026-11-07, semver): `7.0.x` is a backwards-compatible patch of 7.0, `7.1` is a minor that extends 7, `8` is not backwards compatible. `detectGedcomVersion` therefore returns `'7.0'` for every `7.<minor>[.<patch>]` and `'unknown'` for major 8 and above. Tags that 7.1+ adds and the importer does not read reach the accounting report, so a minor-version extension is named and not dropped. The fix changes DB output for `family-historian.ged` and any real 7.0.1+ file. T04 records that import-output diff in its commit.
 - **Closed-schema coverage, the parser malformed-line counter and the `.children` lint rule** (spec Part A items not listed in the spec's "Part 1-3") stay unshipped. They are in the spec's reconciliation table and need their own plan.
 
 ## Verification
@@ -76,7 +76,7 @@ Other readers outside the phases: `detect.ts` (reads `HEAD.GEDC.VERS` with raw `
 7. **The census gets smaller by the false positives.** `scripts/accounting-over-samples.ts export-import/samples` no longer lists `INDI.NAME.TRAN` or `SOUR.DATA.EVEN.PLAC.TRAN`. It gains `SNOTE.*` paths only where the 7.0 samples carry them. Both path counts are pasted into the close-out commit.
 8. **Real-user check.** `npm run test:e2e:full` passes across all 8 projects. The importer changed, so `[imports]` is required.
 
-**User-goal-falsifiability check:** if 1-8 pass, can the goal still be unmet? Yes, in two ways. A 7.0 transformation the fixture does not exercise could still drop a node (mitigated by one fixture covering all seven rows above and by the inverted failure direction). A `VERS 7.0.x` file is never normalized (named in the deviations).
+**User-goal-falsifiability check:** if 1-8 pass, can the goal still be unmet? Yes, in two ways. A 7.0 transformation the fixture does not exercise could still drop a node (mitigated by one fixture covering all seven rows above and by the inverted failure direction). A 7.1 file carries a tag the importer has never seen. It is reported and not captured, until Part C lands.
 
 ## Review Focus
 
@@ -99,7 +99,7 @@ Other readers outside the phases: `detect.ts` (reads `HEAD.GEDC.VERS` with raw `
 
 - Modify `src/import/gedcom/tag-accounting.ts`: provenance map, `recordOrigin`, chain-following `markConsumed`.
 - Modify `src/import/gedcom/normalize.ts`: remove the private `getChild`/`getChildren`, add `derive`, record provenance in every rebuild.
-- Modify `src/import/gedcom/detect.ts`: read through `node-utils`.
+- Modify `src/import/gedcom/detect.ts`: read through `node-utils`, and treat every `7.<minor>[.<patch>]` as `'7.0'`.
 - Modify `src/import/gedcom/import-core.ts` (about line 452-472): open the session earlier, walk the original tree.
 - Modify `src/import/gedcom/phases/notes.ts:46-50`: mark the SNOTE record.
 - Modify `src/import/gedcom/accounting-declared.ts`: declarations.
@@ -134,7 +134,7 @@ Other readers outside the phases: `detect.ts` (reads `HEAD.GEDC.VERS` with raw `
 
 - [ ] **Step 3: Write the failing tests** in `import-normalize-accounting.test.ts`:
   - `reports SNOTE.TRAN and SNOTE.TRAN.LANG and not SNOTE.LANG` (Verification 1, inline minimal file from the spec probe). Fails today.
-  - `the pre-existing 7.0.x behaviour is pinned`: `family-historian.ged` detects as `'unknown'`. Passes today, fails on purpose when `detect.ts` is fixed.
+  - `the pre-existing 7.0.x behaviour is pinned`: `family-historian.ged` detects as `'unknown'`. Passes today. T04 flips it to `'7.0'` on purpose.
   - Verification 2 in `import-tag-accounting.test.ts`: `fixtureFiles().some(f => detectGedcomVersion(parseGedcom(read(f))) === '7.0')`. Fails today.
   - Verification 3: raw `unaccountedFor` per fixture equals baseline with `HEAD.GEDC` and `HEAD.GEDC.VERS` removed. Fails today (those two are still present).
 
@@ -205,12 +205,16 @@ Other readers outside the phases: `detect.ts` (reads `HEAD.GEDC.VERS` with raw `
   - `dangling SNOTE pointer imports without a crash` (Review Focus 3).
   - `event-level and FAM-level SNOTE pointers are marked or reported, never silent` on the T01 fixture (Review Focus 5). The assertion lists the actual outcome per path once measured. Record the measured result in the test comment.
   - `7.0 fixture: every node a phase reads is marked` (Verification 4): `unaccountedFor` on the fixture, minus the declared paths, equals the explicit list measured in step 4.
+  - `detectGedcomVersion follows semver` in `import-normalize-accounting.test.ts`, table-driven on `GEDC.VERS`: `7.0`, `7.0.1`, `7.0.13`, `7.1`, `7.2.3` return `'7.0'`. `8.0`, `8.1.2`, `10.0` return `'unknown'`. `7`, `7.`, `7.x` and `70.0` return `'unknown'`. `5.5`, `5.5.1`, `5.5.5` keep their current results.
+  - `family-historian.ged detects as 7.0` replaces the T01 pinned-behaviour test.
 
 - [ ] **Step 2: Run to confirm failure.**
 
 - [ ] **Step 3: Implement.**
   - `import-core.ts`: call `beginAccounting()` first, inside the `try` that already ends in `finally { endAccounting() }`, so `detectGedcomVersion` and `normalizeForImport` run inside the session. Compute `collectUnaccounted(tree, …)` on the parsed `tree`.
-  - `detect.ts`: replace the three raw `.find` calls with `getChild` from `./node-utils`.
+  - `detect.ts`: replace the three raw `.find` calls with `getChild` from `./node-utils`. Replace `v === '7.0'` with `/^7\.\d+(\.\d+)?$/.test(v)`. The return type `GedcomVersion` is unchanged: every 7.x file takes the `'7.0'` path. Major 8 and above falls through to `'unknown'`. Add a comment citing the semver rule.
+  - Update the T01 baseline expectation for `dialects/family-historian.ged`. It now normalizes, so its raw `unaccountedFor` differs from the pinned baseline. Verification 3 compares the other 19 fixtures to the baseline and compares this one to a new pinned list taken after the fix.
+  - Import `family-historian.ged` before and after the `detect.ts` change. Paste the row-count diff per table into the T04 commit message.
   - `notes.ts`: `markConsumed(node)` for the SNOTE record in the loop at line 46.
 
 - [ ] **Step 4: Run the whole accounting suite** and read the fixture's unaccounted list. Expected new paths: `SNOTE.TRAN`, `SNOTE.TRAN.LANG`, `INDI.EXID._SRC`, plus whatever the FAM and event pointers show. Paste the list into the T05 commit.
@@ -238,4 +242,4 @@ Other readers outside the phases: `detect.ts` (reads `HEAD.GEDC.VERS` with raw `
 
 ### Task 6 (Tier 1): Close-out
 
-- [ ] **T-final (Tier 1)** — Invoke `/close-out` skill. The skill walks the 6+1 steps, refuses partial, captures evidence. Required evidence: `npm test` summary, `npm run build` tail, `npm run test:e2e:full` across 8 projects, and both census path counts from T05. The `VERS 7.0.x` finding goes in the archive entry as an open follow-up with no plan yet.
+- [ ] **T-final (Tier 1)** — Invoke `/close-out` skill. The skill walks the 6+1 steps, refuses partial, captures evidence. Required evidence: `npm test` summary, `npm run build` tail, `npm run test:e2e:full` across 8 projects, and both census path counts from T05. Also paste the T04 `family-historian.ged` before/after row counts.
