@@ -177,6 +177,17 @@ describe('every shipped fixture is fully accounted for', () => {
     expect(files.some(f => f.endsWith('arkivdigital.ged'))).toBe(true);
   });
 
+  // Verification 2: the gate reaches normalize. At least one gated fixture must
+  // be GEDCOM 7.0, or normalize.ts is never exercised by this suite. Uses a local
+  // parse of the declared VERS until T04 adds gedcomMajor.
+  it('the corpus contains a GEDCOM 7 fixture, so the gate reaches normalize', () => {
+    const major = (file: string): number => {
+      const m = /^2 VERS\s+(\d+)/m.exec(readFileSync(file, 'utf-8'));
+      return m ? parseInt(m[1], 10) : NaN;
+    };
+    expect(fixtureFiles().some(f => major(f) === 7)).toBe(true);
+  });
+
   for (const file of fixtureFiles()) {
     it(`${relative(HERE, file)} — no undeclared unaccounted tags`, async () => {
       const freshDb = await createTestDb();

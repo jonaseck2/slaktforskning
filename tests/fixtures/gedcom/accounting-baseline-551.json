@@ -1,0 +1,686 @@
+{
+  "deep_nesting.ged": [
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ],
+  "dialects/arkivdigital.ged": [
+    {
+      "path": "INDI.FAMS",
+      "count": 4
+    },
+    {
+      "path": "FAM._DOMESTIC_PARTNERSHIP._DATE_TEXT",
+      "count": 1
+    },
+    {
+      "path": "HEAD.CHAR",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.FORM",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "INDI.FAMC",
+      "count": 1
+    },
+    {
+      "path": "INDI.NAME.GIVN",
+      "count": 1
+    },
+    {
+      "path": "INDI.NAME.SURN",
+      "count": 1
+    },
+    {
+      "path": "INDI.NOTE._TAG",
+      "count": 1
+    },
+    {
+      "path": "INDI.NOTE._TAG.TYPE",
+      "count": 1
+    },
+    {
+      "path": "INDI.NOTE._TITLE",
+      "count": 1
+    },
+    {
+      "path": "INDI.OBJE._POS",
+      "count": 1
+    },
+    {
+      "path": "INDI.OBJE._PRIM",
+      "count": 1
+    },
+    {
+      "path": "OBJE._CAPT",
+      "count": 1
+    },
+    {
+      "path": "OBJE._FOFN",
+      "count": 1
+    },
+    {
+      "path": "OBJE._OWN",
+      "count": 1
+    },
+    {
+      "path": "OBJE._SIZE",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ],
+  "dialects/family-historian.ged": [
+    {
+      "path": "INDI.FAMS",
+      "count": 2
+    },
+    {
+      "path": "HEAD.CHAR",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DATE",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DEST",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.FORM",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "HEAD.SUBM",
+      "count": 1
+    },
+    {
+      "path": "INDI._FLGS",
+      "count": 1
+    },
+    {
+      "path": "INDI._FLGS._LIVING",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ],
+  "dialects/family-tree-maker.ged": [
+    {
+      "path": "INDI.FAMC",
+      "count": 2
+    },
+    {
+      "path": "INDI.FAMS",
+      "count": 2
+    },
+    {
+      "path": "HEAD.CHAR",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DATE",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DEST",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.FORM",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "HEAD.SUBM",
+      "count": 1
+    },
+    {
+      "path": "INDI.OBJE._PRIM",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ],
+  "dialects/genney.ged": [
+    {
+      "path": "INDI.FAMS",
+      "count": 2
+    },
+    {
+      "path": "HEAD.CHAR",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DATE",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DATE.TIME",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DEST",
+      "count": 1
+    },
+    {
+      "path": "HEAD.FILE",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.FORM",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "HEAD.SUBM",
+      "count": 1
+    },
+    {
+      "path": "INDI.NAME.GIVN",
+      "count": 1
+    },
+    {
+      "path": "INDI.NAME.SURN",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ],
+  "dialects/gramps.ged": [
+    {
+      "path": "INDI.FAMS",
+      "count": 2
+    },
+    {
+      "path": "HEAD.CHAR",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DATE",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DEST",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.FORM",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "HEAD.SUBM",
+      "count": 1
+    },
+    {
+      "path": "INDI.NAME.GIVN",
+      "count": 1
+    },
+    {
+      "path": "INDI.NAME.SURN",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ],
+  "dialects/holger.ged": [
+    {
+      "path": "INDI._HDP",
+      "count": 2
+    },
+    {
+      "path": "INDI.FAMS",
+      "count": 2
+    },
+    {
+      "path": "INDI.NAME.FORE",
+      "count": 2
+    },
+    {
+      "path": "HEAD.CHAR",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DATE",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DEST",
+      "count": 1
+    },
+    {
+      "path": "HEAD.FILE",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.FORM",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ],
+  "dialects/legacy.ged": [
+    {
+      "path": "INDI._LIVING",
+      "count": 2
+    },
+    {
+      "path": "INDI.FAMS",
+      "count": 2
+    },
+    {
+      "path": "HEAD.CHAR",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DATE",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DEST",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.FORM",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "HEAD.SUBM",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ],
+  "dialects/macfamilytree.ged": [
+    {
+      "path": "INDI.FAMS",
+      "count": 2
+    },
+    {
+      "path": "HEAD.CHAR",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DATE",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DEST",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.FORM",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "HEAD.SUBM",
+      "count": 1
+    },
+    {
+      "path": "INDI.NAME.GIVN",
+      "count": 1
+    },
+    {
+      "path": "INDI.NAME.SURN",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ],
+  "dialects/myheritage.ged": [
+    {
+      "path": "INDI.FAMS",
+      "count": 2
+    },
+    {
+      "path": "HEAD.CHAR",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DATE",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DEST",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.FORM",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "HEAD.SUBM",
+      "count": 1
+    },
+    {
+      "path": "INDI.NAME.GIVN",
+      "count": 1
+    },
+    {
+      "path": "INDI.NAME.SURN",
+      "count": 1
+    },
+    {
+      "path": "INDI.OBJE._PRIM",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ],
+  "dialects/paf.ged": [
+    {
+      "path": "INDI.FAMC",
+      "count": 2
+    },
+    {
+      "path": "INDI.FAMS",
+      "count": 2
+    },
+    {
+      "path": "HEAD.CHAR",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DATE",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DEST",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.FORM",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "HEAD.SUBM",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ],
+  "dialects/rootsmagic.ged": [
+    {
+      "path": "INDI.FAMS",
+      "count": 2
+    },
+    {
+      "path": "HEAD.CHAR",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DATE",
+      "count": 1
+    },
+    {
+      "path": "HEAD.DEST",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.FORM",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "HEAD.SUBM",
+      "count": 1
+    },
+    {
+      "path": "INDI.ASSO.SOUR",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ],
+  "duplicate_xrefs.ged": [
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ],
+  "empty_fields.ged": [
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ],
+  "encoding.ged": [
+    {
+      "path": "HEAD.CHAR",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ],
+  "large_family.ged": [
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ],
+  "malformed_dates.ged": [
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ],
+  "minimal.ged": [
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ],
+  "mixed_line_endings.ged": [
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ],
+  "non_standard_tags.ged": [
+    {
+      "path": "HEAD.GEDC",
+      "count": 1
+    },
+    {
+      "path": "HEAD.GEDC.VERS",
+      "count": 1
+    },
+    {
+      "path": "INDI._CUSTOM",
+      "count": 1
+    },
+    {
+      "path": "INDI._MTTAG",
+      "count": 1
+    },
+    {
+      "path": "INDI._PHOTO",
+      "count": 1
+    },
+    {
+      "path": "INDI._WEBTAG",
+      "count": 1
+    },
+    {
+      "path": "TRLR",
+      "count": 1
+    }
+  ]
+}

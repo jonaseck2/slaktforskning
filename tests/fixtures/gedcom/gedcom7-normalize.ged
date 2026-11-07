@@ -1,0 +1,42 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @N1@ SNOTE Anteckning om Anna
+1 LANG sv
+1 TRAN Note about Anna
+2 LANG en
+0 @S1@ SOUR
+1 TITL Kyrkobok
+0 @I1@ INDI
+1 NAME Anna Maria /Berg/
+2 GIVN Anna
+2 GIVN Maria
+2 SURN Berg
+2 SURN Lind
+2 TRAN Anna /Berg/
+3 LANG en
+1 SEX F
+1 BIRT
+2 DATE
+3 PHRASE sometime in spring
+2 PLAC Gävle
+3 TRAN Gefle
+4 LANG sv
+2 SNOTE @N1@
+1 DEAT
+2 DATE 1900
+3 PHRASE about 1900
+1 EXID abc123
+2 TYPE https://example.org/ids
+2 _SRC extra
+1 SNOTE @N1@
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Erik /Berg/
+1 SEX M
+1 FAMS @F1@
+0 @F1@ FAM
+1 HUSB @I2@
+1 WIFE @I1@
+1 SNOTE @N1@
+0 TRLR
