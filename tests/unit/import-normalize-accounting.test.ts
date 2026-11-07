@@ -416,19 +416,22 @@ describe('the 7.0 fixture after T04', () => {
     expect(paths.has('INDI.BIRT.SNOTE')).toBe(false);
   });
 
-  // Verification 4. Every node no phase reads is declared with a reason (T05), and
-  // the five that are declared still appear in the report as unaccounted-for.
-  it('7.0 fixture: every node a phase reads is marked', async () => {
+  // Verification 4. The exact raw list, declared paths included: a provenance hole
+  // on a declared path (a wildcard, INDI.FAMS, TRLR) must fail here too.
+  it('7.0 fixture: unaccountedFor is exactly the nodes no phase reads', async () => {
     const report = await importGedcom(await createTestDb(), fixture());
-    const unaccounted = report.unaccountedFor ?? [];
-    expect(unaccounted.filter(u => !matchDeclared(u.path))).toEqual([]);
-    // Declared is not hidden: the researcher is still told about these five.
-    expect(unaccounted.map(u => `${u.count} ${u.path}`).sort()).toEqual(expect.arrayContaining([
+    const rows = (report.unaccountedFor ?? []).map(u => `${u.count} ${u.path}`).sort();
+    expect(rows).toEqual([
       '1 FAM.SNOTE',
       '1 INDI.DEAT.DATE.PHRASE',
       '1 INDI.EXID._SRC',
       '1 SNOTE.TRAN',
       '1 SNOTE.TRAN.LANG',
-    ]));
+      '1 TRLR',
+      '2 INDI.FAMS',
+      '2 INDI.NAME.GIVN',
+      '2 INDI.NAME.SURN',
+    ].sort());
+    expect((report.unaccountedFor ?? []).filter(u => !matchDeclared(u.path))).toEqual([]);
   });
 });
