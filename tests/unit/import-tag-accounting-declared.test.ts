@@ -138,6 +138,44 @@ describe('declared unmapped tags', () => {
     expect(fam?.reason).toMatch(/22 real 7\.0 files/);
   });
 
+  // ── Verification 7: the SNOTE paths the parsed-tree gate names on the real 7.0 samples
+  // [path, occurrences, files, prefix]. Measured 2026-11-07 over the 22 files in
+  // export-import/samples/familysearch-gedcom7.
+  const SNOTE_PATHS: Array<[string, number, number, RegExp]> = [
+    ['FAM.ASSO.SNOTE', 1, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['FAM.NO.SNOTE', 1, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['INDI.DEAT.SNOTE', 1, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['INDI.FAMS.SNOTE', 1, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['INDI.NAME.SNOTE', 2, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['INDI.NO.SNOTE', 1, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['OBJE.SOUR.SNOTE', 1, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['SOUR.DATA.EVEN.PLAC.SNOTE', 1, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['SOUR.DATA.SNOTE', 1, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['SOUR.REPO.SNOTE', 1, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['SUBM.SNOTE', 2, 2, /^unmapped:pending-standard-tag-gaps/],
+    ['FAM.SLGS.SNOTE', 1, 1, /^excluded:not-relevant/],
+    ['INDI.SLGC.SNOTE', 1, 1, /^excluded:not-relevant/],
+    ['SNOTE.CREA', 1, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.CREA.DATE', 1, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.CREA.DATE.TIME', 1, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.EXID', 2, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.EXID.TYPE', 2, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.MIME', 1, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.REFN', 2, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.REFN.TYPE', 2, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.SOUR', 3, 2, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.SOUR.PAGE', 2, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.TRAN.MIME', 2, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.UID', 2, 1, /^unmapped:pending-unmapped-capture/],
+  ];
+
+  it.each(SNOTE_PATHS)('%s is declared with its measured count and denominator', (path, occ, files, prefix) => {
+    const reason = matchDeclared(path)?.reason;
+    expect(reason, `${path} is undeclared`).toBeDefined();
+    expect(reason!).toMatch(prefix);
+    expect(reason!).toContain(`${occ} occurrence${occ === 1 ? '' : 's'} across ${files} of 22 real 7.0 files`);
+  });
+
   it('every reason uses a recognised prefix, so nobody can shrug in prose', () => {
     for (const d of DECLARED_UNMAPPED) {
       expect(d.reason, `unrecognised reason prefix on ${d.path}`)
