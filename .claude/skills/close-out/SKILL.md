@@ -31,6 +31,7 @@ The skill refuses with a clear message if any prerequisite fails. No partial clo
 
 1. **Verification evidence captured.** Per `.claude/rules/plans.md` "Verification discipline at close-out":
    - `npm test` ran, exit 0, summary line captured.
+   - `npm run lint` ran, exit 0, with zero errors and zero warnings (see `.claude/rules/lint.md`).
    - `npm run build` ran, exit 0, tail captured.
    - `npm run test:e2e:full` ran for UI/importer/`data-changed`-touching plans (or `npm run test:e2e` for non-UI plans), per-project counts captured.
    - User-observable Verification §1 criteria walked (UI screenshot, MCP call, file output, whatever the plan declares).

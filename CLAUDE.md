@@ -178,7 +178,7 @@ docs/                     # PLAN.md, DATA_MODEL.md, MCP.md, IPC_REFERENCE.md, UX
 
 ```bash
 npm start              # Launch the Tauri app in dev mode (Rust + Vite HMR)
-npm run lint           # ESLint (0 errors required before commit)
+npm run lint           # ESLint (0 errors AND 0 warnings required before commit, see .claude/rules/lint.md)
 npm test               # Vitest unit + component (~4000 tests, 80% coverage on src/api/)
 npm run test:e2e       # Build the Tauri bundle + run Playwright. Use `npx playwright test` if `out/` is already built.
 npm run build          # Full Tauri bundle for current platform
