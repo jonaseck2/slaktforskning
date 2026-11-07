@@ -198,6 +198,7 @@ One synthetic file carrying a citation with `OBJE`, a `NAME` with `SPFX`, a `SOU
 242 occurrences across 51 paths — `SOUR.NOTE`, `HEAD.NOTE`, `INDI.NAME.NOTE`, `OBJE.NOTE` and 47 more. The `notes` table is entity-typed already, so this is wiring rather than modelling.
 
 - [ ] Enumerate the 51 host paths from the census; group by entity type.
+- [ ] Cover the 12 shared-note pointer hosts that GEDCOM 7.0 files carry, each `.SNOTE` under: `FAM`, `FAM.ASSO`, `FAM.NO`, `INDI.DEAT`, `INDI.FAMS`, `INDI.NAME`, `INDI.NO`, `OBJE.SOUR`, `SOUR.DATA.EVEN.PLAC`, `SOUR.DATA`, `SOUR.REPO`, `SUBM`. `normalize.ts` inlines each pointer as a `NOTE`, and `phaseNoteLinks` reads only top-level `INDI`, `SOUR`, `REPO` and `OBJE` pointers and skips `FAM`. These 12 are declared `unmapped:pending-standard-tag-gaps` in `src/import/gedcom/accounting-declared.ts` and must reach zero before this plan completes. (`FAM.SLGS.SNOTE` and `INDI.SLGC.SNOTE` are LDS and stay excluded.)
 - [ ] Failing test per entity type that gains a note.
 - [ ] Implement; declare any host whose entity type the `notes` table does not model.
 - [ ] Commit — `feat(import): a note stays with whatever it was written on`.

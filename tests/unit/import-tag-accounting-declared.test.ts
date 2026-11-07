@@ -1,7 +1,7 @@
 // The declared-unmapped list is how a tag stops being a silent drop and becomes
 // a decision. See docs/plans/2026-08-23-importer-tag-accounting.md Task 5.
 
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { DECLARED_UNMAPPED, matchDeclared } from '../../src/import/gedcom/accounting-declared';
@@ -176,11 +176,18 @@ describe('declared unmapped tags', () => {
     expect(reason!).toContain(`${occ} occurrence${occ === 1 ? '' : 's'} across ${files} of 22 real 7.0 files`);
   });
 
-  it('every pending-standard-tag-gaps SNOTE host entry says the plan coverage is not verified', () => {
+  it('every pending-standard-tag-gaps SNOTE host entry is listed in the plan text', () => {
+    const plan = readFileSync(join(__dirname, '../../docs/plans/2026-08-28-standard-tag-gaps.md'), 'utf-8');
+    const t04 = plan.slice(plan.indexOf('### T04'), plan.indexOf('### T05'));
     const hosts = DECLARED_UNMAPPED.filter(d =>
       d.path.endsWith('.SNOTE') && d.reason.startsWith('unmapped:pending-standard-tag-gaps'));
     expect(hosts.length).toBe(12);
-    for (const d of hosts) expect(d.reason, d.path).toContain('Not verified');
+    for (const d of hosts) {
+      const host = d.path.slice(0, -'.SNOTE'.length);
+      expect(d.reason, d.path).toContain('T04');
+      expect(d.reason, d.path).not.toContain('Not verified');
+      expect(t04.includes(`\`${host}\``), `${host} is not listed in T04 of the plan`).toBe(true);
+    }
   });
 
   it('NAME.GIVN and NAME.SURN reasons do not claim the merged text survives', () => {
