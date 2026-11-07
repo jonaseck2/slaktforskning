@@ -176,6 +176,21 @@ describe('declared unmapped tags', () => {
     expect(reason!).toContain(`${occ} occurrence${occ === 1 ? '' : 's'} across ${files} of 22 real 7.0 files`);
   });
 
+  it('every pending-standard-tag-gaps SNOTE host entry says the plan coverage is not verified', () => {
+    const hosts = DECLARED_UNMAPPED.filter(d =>
+      d.path.endsWith('.SNOTE') && d.reason.startsWith('unmapped:pending-standard-tag-gaps'));
+    expect(hosts.length).toBe(12);
+    for (const d of hosts) expect(d.reason, d.path).toContain('Not verified');
+  });
+
+  it('NAME.GIVN and NAME.SURN reasons do not claim the merged text survives', () => {
+    for (const p of ['INDI.NAME.GIVN', 'INDI.NAME.SURN']) {
+      const reason = matchDeclared(p)?.reason ?? '';
+      expect(reason, p).not.toContain('survives in the merged value');
+      expect(reason, p).toContain('No importer phase reads');
+    }
+  });
+
   it('every reason uses a recognised prefix, so nobody can shrug in prose', () => {
     for (const d of DECLARED_UNMAPPED) {
       expect(d.reason, `unrecognised reason prefix on ${d.path}`)
