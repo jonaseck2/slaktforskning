@@ -10,7 +10,6 @@
 
 import type { GedcomNode } from '../../gedcom/parser';
 import { gedcomMajor, type GedcomVersion } from './detect';
-import { getChild } from './node-utils';
 import { markConsumed, recordOrigin } from './tag-accounting';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
