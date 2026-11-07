@@ -174,7 +174,7 @@ describe('runChecksForEvent (save-time hook)', async () => {
   });
 
   it('does not flag the birth event against itself', async () => {
-    const { person, birth } = await personWithBirth('1944');
+    const { birth } = await personWithBirth('1944');
     const results = await runChecksForEvent(db, birth.id);
     expect(results).toHaveLength(0);
   });

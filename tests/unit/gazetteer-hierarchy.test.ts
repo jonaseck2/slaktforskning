@@ -2,11 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { getAllGazetteers } from '../../src/api/place-gazetteers/bundled';
 import { GAZETTEER_NODE_TYPES } from '../../src/api/place-gazetteers/types';
 import { loadGazetteers } from '../../src/api/place-gazetteers/merge';
-import type { GazetteerNode, Gazetteer } from '../../src/api/place-gazetteers/types';
+import type { GazetteerNode } from '../../src/api/place-gazetteers/types';
 
 describe('gazetteer hierarchy integrity', () => {
   const all = getAllGazetteers();
-  const enabledIds = all.filter(g => g.shape !== 'language' && g.root).map(g => g.id);
 
   it('migrated gazetteers root at World or World (Historical)', () => {
     // Until each per-country gazetteer migrates (Phase 3+), legacy roots like "Sverige" / "Norge" still exist.

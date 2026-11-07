@@ -3,6 +3,7 @@
 // mocks `@tauri-apps/api/core` so we can inspect the call args without a
 // Tauri runtime.
 
+// eslint-disable-next-line import/order -- the imports below follow vi.mock on purpose: the mock factory closes over invokeSpy, so they cannot move above it
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Mock the Tauri invoke() function. Each test sets the resolved return value;

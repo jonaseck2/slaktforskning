@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
-import { i18n } from './setup';
 import PersonMediaSection from '../../src/renderer/components/PersonMediaSection.vue';
 import EntityMediaSection from '../../src/renderer/components/EntityMediaSection.vue';
 import LinkedMediaSection from '../../src/renderer/components/LinkedMediaSection.vue';
 import MediaAddRow from '../../src/renderer/components/MediaAddRow.vue';
 import MediaPicker from '../../src/renderer/components/MediaPicker.vue';
+import { i18n } from './setup';
 
 // User-goal lock: every right-side panel that has a media section exposes the
 // same inline add-row shape — type letters to link an existing media item, or

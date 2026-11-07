@@ -110,7 +110,7 @@ async function seedComprehensive(db: Database): void {
   });
 
   // ── Marriage event linked to the relationship (FAM-level event) ──────────
-  const marr = await createEvent(db, {
+  await createEvent(db, {
     event_type: 'marriage',
     date_type: 'exact',
     date_value: '1880-06-14',

@@ -259,7 +259,7 @@ describe('getPersonsForPlace', async () => {
 describe('listPlaceChildren', async () => {
   it('returns root places when parentId is null', async () => {
     const sweden = await createPlace(db, { name: 'Sverige' });
-    const denmark = await createPlace(db, { name: 'Danmark' });
+    await createPlace(db, { name: 'Danmark' });
     await createPlace(db, { name: 'Stockholm', parent_place_id: sweden.id });
 
     const roots = await listPlaceChildren(db, null);

@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { describe, it, expect } from 'vitest';
 
 /**
  * Mechanical guard from `docs/plans/archive/2026-05-21-oss-launch-demo-and-manual.md` T13:

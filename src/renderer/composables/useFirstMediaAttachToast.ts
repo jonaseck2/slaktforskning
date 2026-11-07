@@ -11,9 +11,9 @@
 // know what to look for. This toast surfaces that side effect on first
 // successful attach, then never again.
 
+import { useI18n } from 'vue-i18n';
 import { useFirstEncounter } from './useFirstEncounter';
 import { useToast } from './useToast';
-import { useI18n } from 'vue-i18n';
 
 const KEY = 'toast.media.firstAttach';
 

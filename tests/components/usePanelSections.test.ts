@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { usePanelSections } from '../../src/renderer/composables/usePanelSections';
 
 // The vitestSetup.ts installs a reliable localStorage mock. Clear it before

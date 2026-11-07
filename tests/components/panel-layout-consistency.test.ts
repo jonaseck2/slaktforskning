@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { i18n } from './setup';
 import PersonPanel from '../../src/renderer/components/PersonPanel.vue';
 import PlacePanel from '../../src/renderer/components/PlacePanel.vue';
 import SourcePanel from '../../src/renderer/components/SourcePanel.vue';
@@ -9,6 +8,7 @@ import ResearchTaskPanel from '../../src/renderer/components/ResearchTaskPanel.v
 import MediaPanel from '../../src/renderer/components/MediaPanel.vue';
 import ReportPanel from '../../src/renderer/components/ReportPanel.vue';
 import WebsitePanel from '../../src/renderer/components/WebsitePanel.vue';
+import { i18n } from './setup';
 
 // Each panel mounted in a stable, low-side-effect state — sufficient to read
 // the root element's CSS classes. Mounting stubs window.api to avoid network

@@ -20,8 +20,8 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
-import { i18n } from './setup';
 import PersonPanel from '../../src/renderer/components/PersonPanel.vue';
+import { i18n } from './setup';
 
 // PersonPanel uses useRouter() — stub it so the component mounts without
 // "injection Symbol(router) not found" Vue warnings.

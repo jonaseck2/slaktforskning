@@ -14,7 +14,7 @@ import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
 import { exportGedcom } from '../../src/gedcom/exporter';
 import { createPerson } from '../../src/api/persons';
-import { createNote, linkNoteToEntity, listNotes, getNotesForEntity } from '../../src/api/notes';
+import { createNote, linkNoteToEntity, listNotes } from '../../src/api/notes';
 import { createTestDb } from './helpers';
 
 let db: Awaited<ReturnType<typeof createTestDb>>;

@@ -6,12 +6,12 @@
 // surface-contract checks compose with the rest of the app.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import {
   createNote, getNote, listNotes, updateNote, deleteNote,
   linkNoteToEntity, unlinkNoteFromEntity, getNotesForEntity, getEntitiesForNote,
 } from '../../src/api/notes';
 import { createPerson } from '../../src/api/persons';
+import { createTestDb } from './helpers';
 
 let db: Awaited<ReturnType<typeof createTestDb>>;
 beforeEach(async () => { db = await createTestDb(); });

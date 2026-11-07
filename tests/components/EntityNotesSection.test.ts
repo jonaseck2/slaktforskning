@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import EntityNotesSection from '../../src/renderer/components/EntityNotesSection.vue';
-import { i18n } from './setup';
 import type { NoteEntityType } from '../../src/api/types';
+import { i18n } from './setup';
 
 const ENTITY_TYPES: NoteEntityType[] = [
   'person',

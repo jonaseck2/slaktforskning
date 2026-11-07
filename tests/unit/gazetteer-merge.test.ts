@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { mergeTree, buildNodeIndex, loadGazetteers } from '../../src/api/place-gazetteers/merge';
 import type { Gazetteer, GazetteerNode } from '../../src/api/place-gazetteers/types';
 

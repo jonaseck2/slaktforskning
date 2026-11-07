@@ -9,12 +9,12 @@
 // survived. The existing golden round-trip test explicitly EXCLUDES media_links,
 // so this gap was not covered by "existing tests" — this is the standing guard.
 import { describe, it, expect } from 'vitest';
-import { createTestDb } from './helpers';
 import { createSource, searchSources } from '../../src/api/sources';
 import { createMedia, addMediaLink, getLinksForMedia, listMedia } from '../../src/api/media';
 import { exportGedcom } from '../../src/gedcom/exporter';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
+import { createTestDb } from './helpers';
 
 describe.each(['5.5.1', '7.0'] as const)('media→source link round-trips under GEDCOM %s', (version) => {
   it('survives export + re-import', async () => {

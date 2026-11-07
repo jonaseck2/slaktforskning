@@ -10,8 +10,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
-import { i18n } from './setup';
 import DuplicatesView from '../../src/renderer/views/DuplicatesView.vue';
+import { i18n } from './setup';
 
 interface MockApi {
   duplicates: {

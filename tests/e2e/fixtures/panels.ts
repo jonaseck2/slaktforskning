@@ -363,7 +363,7 @@ export const PANELS: PanelDescriptor[] = [
     // /media/:id doesn't exist — MediaView uses stateful selection.
     // selectAfterNavigate (below) clicks the matching list row to mount the panel.
     route: () => '/media',
-    selectAfterNavigate: async (driver, id) => {
+    selectAfterNavigate: async (driver, _id) => {
       await driver.executeJs(`
         (async () => {
           await new Promise(r => setTimeout(r, 500));

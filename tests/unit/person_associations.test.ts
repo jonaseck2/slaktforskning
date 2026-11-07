@@ -6,7 +6,6 @@
 // relationships pattern.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import {
   createPersonAssociation,
   getPersonAssociation,
@@ -17,6 +16,7 @@ import {
 } from '../../src/api/person_associations';
 import { createPerson, deletePerson } from '../../src/api/persons';
 import type { PersonAssociationRole } from '../../src/api/types';
+import { createTestDb } from './helpers';
 
 let db: Awaited<ReturnType<typeof createTestDb>>;
 beforeEach(async () => { db = await createTestDb(); });

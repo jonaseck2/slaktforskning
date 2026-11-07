@@ -12,7 +12,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
 import { exportGedcom } from '../../src/gedcom/exporter';
-import { createPerson, addPersonName } from '../../src/api/persons';
+import { createPerson } from '../../src/api/persons';
 import { createRelationship, listRelationships } from '../../src/api/relationships';
 import { createTestDb } from './helpers';
 

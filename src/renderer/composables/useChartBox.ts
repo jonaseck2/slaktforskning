@@ -3,8 +3,8 @@ import { useI18n } from 'vue-i18n';
 import { wrapFullNameSegments, truncateToWidth } from '../utils/chart-layout/measure';
 import { BOX_PAD_Y, PORTRAIT_H, TEXT_AREA_W } from '../utils/chart-layout';
 import type { BoxLayout } from '../utils/chart-layout';
-import type { ChartColors } from './useChartColors';
 import type { ColorMode } from '../../api/chart-export';
+import type { ChartColors } from './useChartColors';
 
 // The shape returned by applyColorMode(useChartColors(...)) is the named
 // `ChartColors` interface exported from useChartColors.ts. We import that

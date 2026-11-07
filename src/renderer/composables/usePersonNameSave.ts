@@ -19,8 +19,8 @@
  * the inline toast itself.
  */
 import { ref, type Ref, type ComputedRef } from 'vue';
-import type { PersonNameForm } from './usePersonNameForm';
 import { parseAsteriskNotation } from '../utils/nameUtils';
+import type { PersonNameForm } from './usePersonNameForm';
 
 export interface PendingNameCitation {
   tempId?: string;

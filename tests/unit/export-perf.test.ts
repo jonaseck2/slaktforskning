@@ -30,7 +30,6 @@
 
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { Database } from 'node-sqlite3-wasm';
-import { createTestDb } from './helpers';
 import { runSql } from '../../src/api/db';
 import { createPerson, addPersonName } from '../../src/api/persons';
 import { createPlace } from '../../src/api/places';
@@ -38,6 +37,7 @@ import { createEvent } from '../../src/api/events';
 import { createRelationship, addEventParticipant } from '../../src/api/relationships';
 import { createNote, linkNoteToEntity } from '../../src/api/notes';
 import { exportGedcom } from '../../src/gedcom/exporter';
+import { createTestDb } from './helpers';
 
 // Seed size. 5 000 persons is large enough that any per-entity query path
 // blows the budget by orders of magnitude, while still seeding in a few

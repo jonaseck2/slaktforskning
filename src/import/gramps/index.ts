@@ -10,8 +10,8 @@
  */
 
 import * as fs from 'node:fs';
-import { queryAll, runSql } from '../../api/db';
 import type { Database } from 'node-sqlite3-wasm';
+import { queryAll, runSql } from '../../api/db';
 import { transformGramps, emptyGrampsSummary, type GrampsImportSummary } from './transform';
 import { extractGrampsArchive, type GrampsMediaEntry } from './archive';
 

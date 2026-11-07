@@ -14,8 +14,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
-import { i18n } from './setup';
 import MediaView from '../../src/renderer/views/MediaView.vue';
+import { i18n } from './setup';
 
 interface MockApi {
   media: Record<string, ReturnType<typeof vi.fn>>;

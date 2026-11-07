@@ -6,7 +6,6 @@
 // emitter has something to read.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import { createPerson } from '../../src/api/persons';
 import {
   createEvent,
@@ -14,6 +13,7 @@ import {
   getEventsForPerson,
 } from '../../src/api/events';
 import { addEventParticipant } from '../../src/api/relationships';
+import { createTestDb } from './helpers';
 
 let db: Awaited<ReturnType<typeof createTestDb>>;
 beforeEach(async () => { db = await createTestDb(); });

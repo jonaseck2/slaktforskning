@@ -7,11 +7,11 @@ import type { Place, Citation, Repository, Media } from '../api/types';
 // once and grouped into Maps. Per-row api/ getters inside the persons /
 // couples / sources loops are IPC round-trips through the Tauri db-shim and
 // are banned by .claude/rules/performance.md.
-import { prefetchExportData, mediaEntityKey, type ExportPrefetch } from './export-prefetch';
 import type { ExternalIdentifier } from '../api/external_identifiers';
 import type { ExportOptions } from '../api/export_options';
 import { applyExportOptions } from '../api/export_options';
 import { getDbSetting } from '../api/db_settings';
+import { prefetchExportData, mediaEntityKey, type ExportPrefetch } from './export-prefetch';
 import { formatGedcomDate, isStandardGedcomDate } from './date';
 // The two tag shapes that carry an external_identifiers row. Nothing in this
 // file emits or parses them by hand.

@@ -6,9 +6,9 @@
  *
  *   npx tsx scripts/import-row-counts.ts "export-import/min släkt"
  */
-import pkg from 'node-sqlite3-wasm';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import pkg from 'node-sqlite3-wasm';
 import { initializeSchema } from '../src/api/schema';
 import { parseGedcom } from '../src/gedcom/parser';
 import { importGedcom } from '../src/import/gedcom';

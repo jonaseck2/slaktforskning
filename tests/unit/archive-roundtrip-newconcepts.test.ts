@@ -12,10 +12,10 @@
 // name_translations, place_translations, source_coverage_events) plus the
 // new events columns (is_negation, negation_event_type) when the user
 // opens that archive on another machine / another tool.
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { Database } from 'node-sqlite3-wasm';
 import { exportArchiveToBytes } from '../../src/api/archive_export';
 import { importArchiveFromBytes } from '../../src/api/archive_import';

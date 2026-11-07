@@ -15,6 +15,7 @@
  * drift: missing wiring (binding missing) and incorrect wiring (binding
  * present but talking to the wrong Rust command).
  */
+// eslint-disable-next-line import/order -- the imports below follow vi.mock on purpose: the mock factory closes over invokeSpy, so they cannot move above it
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const invokeSpy = vi.fn();

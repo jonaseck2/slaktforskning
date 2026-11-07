@@ -137,7 +137,7 @@ function main(): void {
     const region = regionNodes.get(prov.regionCode);
     if (!region) continue;
     const placeNodes: GazetteerNode[] = [];
-    for (const p of placesByProv.get(`${prov.regionCode}.${[...provs.entries()].find(([k, v]) => v === prov)![0].split('.')[1]}`) ?? []) {
+    for (const p of placesByProv.get(`${prov.regionCode}.${[...provs.entries()].find(([, v]) => v === prov)![0].split('.')[1]}`) ?? []) {
       placeNodes.push({
         name: p.name,
         type: 'admin3',

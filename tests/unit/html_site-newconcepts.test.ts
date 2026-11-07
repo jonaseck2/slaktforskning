@@ -10,6 +10,7 @@
 // (EntityNotesSection, PersonAssociationsSection, etc.) render the new
 // data in static mode without any code change.
 import { describe, it, expect, beforeEach } from 'vitest';
+import type { Database } from 'node-sqlite3-wasm';
 import { createPerson } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
 import { addEventParticipant } from '../../src/api/relationships';
@@ -24,9 +25,8 @@ import { createCitation } from '../../src/api/sources';
 import { buildSnapshot } from '../../src/api/html_site/snapshot';
 import { buildStaticApi } from '../../src/static/static-api';
 import { queryAll } from '../../src/api/db';
-import { createTestDb } from './helpers';
-import type { Database } from 'node-sqlite3-wasm';
 import type { Note, PersonAssociation, NameTranslation, PlaceTranslation, SourceCoverageEvent, Repository } from '../../src/api/types';
+import { createTestDb } from './helpers';
 
 let db: Database;
 beforeEach(async () => { db = await createTestDb(); });

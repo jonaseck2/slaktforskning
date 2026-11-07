@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createPerson } from '../../src/api/persons';
 import { addPersonName } from '../../src/api/persons';
-import { createRelationship, addEventParticipant } from '../../src/api/relationships';
+import { addEventParticipant } from '../../src/api/relationships';
 import { createEvent } from '../../src/api/events';
 import { createPlace } from '../../src/api/places';
 import { createMedia, addMediaLink } from '../../src/api/media';

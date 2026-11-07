@@ -4,7 +4,6 @@
 // FK cascade behaviour from person_names and places.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers';
 import { createPerson, addPersonName, deletePersonName } from '../../src/api/persons';
 import { findOrCreatePlace, deletePlace } from '../../src/api/places';
 import {
@@ -17,6 +16,7 @@ import {
   updatePlaceTranslation,
   deletePlaceTranslation,
 } from '../../src/api/translations';
+import { createTestDb } from './helpers';
 
 let db: Awaited<ReturnType<typeof createTestDb>>;
 beforeEach(async () => { db = await createTestDb(); });

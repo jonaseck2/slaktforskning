@@ -33,6 +33,7 @@
  *      scale with row count — the whole point of batching.
  */
 
+// eslint-disable-next-line import/order -- the imports below follow vi.mock on purpose: the mock factory closes over invokeSpy, so they cannot move above it
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Mock the Tauri invoke() function. All db_* calls route into a real

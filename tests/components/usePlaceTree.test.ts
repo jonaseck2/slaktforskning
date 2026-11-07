@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { usePlaceTree, type PlaceTreeNode } from '../../src/renderer/composables/usePlaceTree';
+import { usePlaceTree } from '../../src/renderer/composables/usePlaceTree';
 
 type DbPlace = { id: string; name: string; parent_place_id: string | null; place_type: string | null; hasChildren: boolean };
 type GazNode = { name: string; type: string; children?: GazNode[] };

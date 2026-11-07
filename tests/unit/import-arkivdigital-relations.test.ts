@@ -6,8 +6,8 @@ import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
 import { queryAll } from '../../src/api/db';
 import { exportGedcom } from '../../src/gedcom/exporter';
-import { createTestDb, readDialect } from './helpers';
 import { parentRelSubtype } from '../../src/import/gedcom/profiles/arkivdigital';
+import { createTestDb, readDialect } from './helpers';
 
 let db: Awaited<ReturnType<typeof createTestDb>>;
 beforeEach(async () => { db = await createTestDb(); });

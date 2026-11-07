@@ -1,9 +1,8 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll } from '../db';
 import type { CheckResult, CheckSeverity } from './check-utils';
-import { loadPersonEvents, dateDefinitelyAfter, personIdsWithEvent, TODAY, extractYear, parseLooseDate } from './check-utils';
+import { loadPersonEvents, dateDefinitelyAfter, personIdsWithEvent, TODAY, extractYear } from './check-utils';
 
-const TODAY_PARSED = parseLooseDate(TODAY)!;
 function dateInFuture(s: string): boolean {
   return dateDefinitelyAfter(s, TODAY);
 }

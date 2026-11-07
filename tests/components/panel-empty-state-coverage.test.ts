@@ -1,6 +1,6 @@
-import { describe, it } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, resolve, basename } from 'node:path';
+import { describe, it } from 'vitest';
 
 const COMPONENTS_DIR = resolve(__dirname, '../../src/renderer/components');
 

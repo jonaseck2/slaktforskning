@@ -3,8 +3,8 @@
  * (the latter skipped if the fixture isn't present in
  * `export-import/samples/native-binary/`).
  */
-import { describe, it, expect, beforeEach } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { transformGramps, parseGrampsXml } from '../../src/import/gramps/transform';
 import { importFromGramps } from '../../src/import/gramps';
 import { listPersons, getPersonNames } from '../../src/api/persons';

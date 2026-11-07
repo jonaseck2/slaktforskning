@@ -22,9 +22,9 @@
  * rationale and the antipattern's history (the 112-skip floor that
  * masked the signal until 2026-05-12).
  */
-import { describe, it, expect } from 'vitest';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { describe, it, expect } from 'vitest';
 
 const TESTS_DIR = join(__dirname, '..');
 const REPO_ROOT = join(TESTS_DIR, '..');
