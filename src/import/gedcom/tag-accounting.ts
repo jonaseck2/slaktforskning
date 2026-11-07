@@ -18,14 +18,18 @@ import type { GedcomNode } from '../../gedcom/parser';
 
 let session: Set<GedcomNode> | null = null;
 // derived node -> root parsed node. Created and dropped with the session.
-let provenance: WeakMap<GedcomNode, GedcomNode> | null = null;
+// A plain Map, not a WeakMap: WeakMap writes cost about 3x more in V8, and at
+// 20 000 persons they added 1.1 s to an import. recordOrigin deletes the entry
+// of an intermediate node once it is derived again, so the map holds at most one
+// entry per node of the final normalized tree, which the import holds anyway.
+let provenance: Map<GedcomNode, GedcomNode> | null = null;
 
 export function beginAccounting(): void {
   if (session !== null) {
     throw new Error('tag accounting: a session is already active — imports must not overlap');
   }
   session = new Set();
-  provenance = new WeakMap();
+  provenance = new Map();
 }
 
 export function endAccounting(): Set<GedcomNode> {
@@ -46,9 +50,21 @@ export function isAccounting(): boolean {
  * Record that `derived` was built from `origin` (a normalizer's copy of a parsed
  * node). Stores the root origin, so a chain of derivations never grows and
  * `markConsumed` needs one lookup. No-op outside a session.
+ *
+ * When `origin` is itself derived, its entry is dropped: an intermediate node of
+ * one normalize pass is never seen by a phase. This is correct only while each
+ * node is the origin of at most one `derive` call, which holds for every
+ * transformation in `normalize.ts` (each pass copies a node at most once).
  */
 export function recordOrigin(derived: GedcomNode, origin: GedcomNode): void {
-  provenance?.set(derived, provenance.get(origin) ?? origin);
+  if (provenance === null) return;
+  const root = provenance.get(origin);
+  if (root === undefined) {
+    provenance.set(derived, origin);
+  } else {
+    provenance.set(derived, root);
+    provenance.delete(origin);
+  }
 }
 
 /** The parsed node `node` came from, or `node` itself when none is recorded. */

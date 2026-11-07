@@ -286,6 +286,26 @@ describe('accounting provenance', () => {
     expect(consumed.has(origin)).toBe(false);
   });
 
+  // Fix round 1: the provenance Map drops an intermediate's entry once it is
+  // derived again, so it holds one entry per node of the final tree. normalize.ts
+  // never uses one node as the origin of two derives (census 2026-11-07: 14
+  // derive call sites, each pass copies a node at most once).
+  it('the map does not retain intermediates', () => {
+    const origin = node('NAME');
+    const mid = node('NAME');
+    const last = node('NAME');
+    beginAccounting();
+    try {
+      recordOrigin(mid, origin);
+      expect(originOf(mid)).toBe(origin);
+      recordOrigin(last, mid);
+      expect(originOf(last)).toBe(origin);
+      expect(originOf(mid), 'the intermediate entry is dropped').toBe(mid);
+    } finally {
+      endAccounting();
+    }
+  });
+
   it('provenance does not leak into the next session', () => {
     const origin = node('TRAN');
     const derived = node('TRAN');
