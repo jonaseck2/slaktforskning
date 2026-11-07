@@ -82,12 +82,13 @@ describe('accounting provenance', () => {
   it('marking a derived node marks its origin', () => {
     const origin = node('TRAN');
     const derived = node('TRAN');
+    let consumed!: Set<GedcomNode>;
     beginAccounting();
     try {
       recordOrigin(derived, origin);
       markConsumed(derived);
     } finally {
-      var consumed = endAccounting();
+      consumed = endAccounting();
     }
     expect(consumed.has(derived)).toBe(true);
     expect(consumed.has(origin)).toBe(true);
@@ -97,6 +98,7 @@ describe('accounting provenance', () => {
     const origin = node('NAME');
     const mid = node('NAME');
     const last = node('NAME');
+    let consumed!: Set<GedcomNode>;
     beginAccounting();
     try {
       recordOrigin(mid, origin);
@@ -104,7 +106,7 @@ describe('accounting provenance', () => {
       expect(originOf(last)).toBe(origin);
       markConsumed(last);
     } finally {
-      var consumed = endAccounting();
+      consumed = endAccounting();
     }
     expect(consumed.has(origin)).toBe(true);
     expect(consumed.has(last)).toBe(true);
@@ -114,12 +116,26 @@ describe('accounting provenance', () => {
   it('a derived node with no recordOrigin leaves the origin unmarked', () => {
     const origin = node('TRAN');
     const derived = node('TRAN');
+    let consumed!: Set<GedcomNode>;
     beginAccounting();
     try {
       markConsumed(derived);
     } finally {
-      var consumed = endAccounting();
+      consumed = endAccounting();
     }
+    expect(consumed.has(derived)).toBe(true);
+    expect(consumed.has(origin)).toBe(false);
+  });
+
+  it('provenance does not leak into the next session', () => {
+    const origin = node('TRAN');
+    const derived = node('TRAN');
+    beginAccounting();
+    recordOrigin(derived, origin);
+    endAccounting();
+    beginAccounting();
+    markConsumed(derived);
+    const consumed = endAccounting();
     expect(consumed.has(derived)).toBe(true);
     expect(consumed.has(origin)).toBe(false);
   });
