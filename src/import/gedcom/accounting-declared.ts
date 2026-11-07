@@ -28,15 +28,12 @@ export interface DeclaredUnmapped {
 }
 
 export const DECLARED_UNMAPPED: DeclaredUnmapped[] = [
-  // ── Structure and pre-session reads ──────────────────────────────────────
-  // These are consumed, just not by a phase inside the accounting session.
+  // ── Structure ────────────────────────────────────────────────────────────
   { path: 'TRLR',           reason: 'excluded:structural — end-of-file marker, carries no value' },
-  { path: 'HEAD.GEDC',      reason: 'excluded:structural — version envelope, read by detect.ts before the session opens' },
-  { path: 'HEAD.GEDC.VERS', reason: 'excluded:structural — read by detect.ts before the session opens' },
   { path: 'HEAD.GEDC.FORM', reason: 'excluded:structural — always LINEAGE-LINKED in 5.5.1' },
-  { path: 'HEAD.CHAR',      reason: 'excluded:structural — character set, applied at decode time before parsing' },
-  { path: '*.NAME.GIVN',    reason: 'excluded:redundant — folded into the NAME value by normalize.ts before the session; individuals.ts parses the NAME value' },
-  { path: '*.NAME.SURN',    reason: 'excluded:redundant — folded into the NAME value by normalize.ts before the session' },
+  { path: 'HEAD.CHAR',      reason: 'excluded:structural — character set, consumed before parsing: the decoder applies it at decode time, before a tree exists' },
+  { path: '*.NAME.GIVN',    reason: 'excluded:redundant — individuals.ts parses the NAME value, so a single GIVN is read by nobody. When a NAME has several GIVN, normalize.ts (mergeMultipleGivnSurn) merges their text into the first one and the later duplicates stay unmarked: the duplicate nodes are reported, their text survives in the merged value' },
+  { path: '*.NAME.SURN',    reason: 'excluded:redundant — individuals.ts parses the NAME value, so a single SURN is read by nobody. When a NAME has several SURN, normalize.ts (mergeMultipleGivnSurn) merges their text into the first one and the later duplicates stay unmarked: the duplicate nodes are reported, their text survives in the merged value' },
   { path: 'INDI.FAMS',      reason: 'excluded:redundant — the couple link is read from the FAM record HUSB/WIFE' },
   { path: 'INDI.FAMC',      reason: 'excluded:redundant — the parent link is read from the FAM record CHIL' },
 
@@ -53,6 +50,15 @@ export const DECLARED_UNMAPPED: DeclaredUnmapped[] = [
   { path: '*.NOTE._TITLE', reason: 'unmapped:pending-unmapped-capture — a label on a NOTE. The notes table has text and language, no label column, and ~20 occurrences across four real exports do not warrant one. Verbatim capture makes it non-destructive without modelling it.' },
   { path: '*._TAG', reason: 'unmapped:pending-unmapped-capture — a label on a NOTE. The notes table has text and language, no label column, and ~20 occurrences across four real exports do not warrant one. Verbatim capture makes it non-destructive without modelling it.' },
   { path: '*._TAG.TYPE', reason: 'unmapped:pending-unmapped-capture — a label on a NOTE. The notes table has text and language, no label column, and ~20 occurrences across four real exports do not warrant one. Verbatim capture makes it non-destructive without modelling it.' },
+
+  // ── GEDCOM 7.0 gaps surfaced once accounting reached the parsed tree ─────
+  // Counts measured 2026-11-07 with scripts/accounting-over-samples.ts over
+  // export-import/samples/familysearch-gedcom7: 22 .ged files, all VERS 7.0.
+  { path: 'SNOTE.TRAN',          reason: 'unmapped:pending-unmapped-capture — translation of a shared note\'s text, 2 occurrences across 1 of 22 real 7.0 files (maximal70.ged). `notes` holds one text and one language per note and has no translation rows, so modelling it is a table. Verbatim capture keeps it non-destructive without one.' },
+  { path: 'SNOTE.TRAN.LANG',     reason: 'unmapped:pending-unmapped-capture — language of a shared-note translation, 2 occurrences across 1 of 22 real 7.0 files (maximal70.ged). Same missing translation storage as SNOTE.TRAN.' },
+  { path: 'INDI.EXID._SRC',      reason: 'unmapped:pending-unmapped-capture — extra field on an external identifier. convertExidToRefn keeps the value and TYPE as REFN and drops the other children. 0 occurrences across the 22 real 7.0 files; fixture-only (gedcom7-normalize.ged).' },
+  { path: 'INDI.DEAT.DATE.PHRASE', reason: 'unmapped:pending-unmapped-capture — an authored phrase that applyDatePhrase drops when its DATE already has a value (the phrase replaces the value only when DATE is empty). 0 occurrences across the 22 real 7.0 files; fixture-only (gedcom7-normalize.ged).' },
+  { path: 'FAM.SNOTE',           reason: 'unmapped:pending-standard-tag-gaps — shared-note pointer on a family. phaseNoteLinks reads pointers on INDI, SOUR, REPO and OBJE only, so the NOTE normalize.ts inlines from it is read by no phase. 1 occurrence across 1 of 22 real 7.0 files (maximal70.ged). The same gap as the notes-on-hosts-no-phase-reads group in docs/plans/2026-08-28-standard-tag-gaps.md.' },
 
   // ── HEAD metadata about the export itself, not about the family ──────────
   { path: 'HEAD.DATE',      reason: 'excluded:not-relevant — when the exporting program ran, not a fact about the tree' },

@@ -416,21 +416,19 @@ describe('the 7.0 fixture after T04', () => {
     expect(paths.has('INDI.BIRT.SNOTE')).toBe(false);
   });
 
-  // Verification 4. T05 declares these. Until then the fixture gate stays red on them.
+  // Verification 4. Every node no phase reads is declared with a reason (T05), and
+  // the five that are declared still appear in the report as unaccounted-for.
   it('7.0 fixture: every node a phase reads is marked', async () => {
     const report = await importGedcom(await createTestDb(), fixture());
-    const undeclared = (report.unaccountedFor ?? [])
-      .filter(u => !matchDeclared(u.path))
-      .map(u => `${u.count} ${u.path}`)
-      .sort();
-    // Measured 2026-11-07. Each is a node no phase reads, not a false positive:
-    // DEAT.DATE.PHRASE was dropped because the DATE had a value (Review Focus 1).
-    expect(undeclared).toEqual([
+    const unaccounted = report.unaccountedFor ?? [];
+    expect(unaccounted.filter(u => !matchDeclared(u.path))).toEqual([]);
+    // Declared is not hidden: the researcher is still told about these five.
+    expect(unaccounted.map(u => `${u.count} ${u.path}`).sort()).toEqual(expect.arrayContaining([
       '1 FAM.SNOTE',
       '1 INDI.DEAT.DATE.PHRASE',
       '1 INDI.EXID._SRC',
       '1 SNOTE.TRAN',
       '1 SNOTE.TRAN.LANG',
-    ]);
+    ]));
   });
 });

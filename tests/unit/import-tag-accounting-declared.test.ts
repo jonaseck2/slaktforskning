@@ -104,6 +104,40 @@ describe('declared unmapped tags', () => {
     expect(matchDeclared('FAM._DOMESTIC_PARTNERSHIP.DATE')).toBeUndefined();
   });
 
+  // ── normalize-boundary accounting, Task 5 ─────────────────────────────────
+  // detect.ts marks HEAD.GEDC and HEAD.GEDC.VERS inside the session now, so
+  // declaring them as "read before the session" would be a false statement.
+  it('HEAD.GEDC and HEAD.GEDC.VERS are read, not declared', () => {
+    expect(matchDeclared('HEAD.GEDC')).toBeUndefined();
+    expect(matchDeclared('HEAD.GEDC.VERS')).toBeUndefined();
+    expect(matchDeclared('HEAD.GEDC.FORM')).toBeDefined();
+  });
+
+  it('HEAD.CHAR says it is consumed before parsing', () => {
+    expect(matchDeclared('HEAD.CHAR')?.reason).toMatch(/consumed before parsing/);
+  });
+
+  it('NAME.GIVN and NAME.SURN no longer claim normalize folds them into the NAME value', () => {
+    for (const p of ['INDI.NAME.GIVN', 'INDI.NAME.SURN']) {
+      const reason = matchDeclared(p)?.reason ?? '';
+      expect(reason, p).not.toContain('folded into the NAME value');
+      expect(reason, p).toContain('mergeMultipleGivnSurn');
+    }
+  });
+
+  it('the 7.0 gaps are declared with their measured count and denominator', () => {
+    for (const p of ['SNOTE.TRAN', 'SNOTE.TRAN.LANG', 'INDI.EXID._SRC', 'INDI.DEAT.DATE.PHRASE']) {
+      const d = matchDeclared(p);
+      expect(d?.reason, p).toMatch(/^unmapped:pending-unmapped-capture/);
+      expect(d?.reason, p).toMatch(/\d+ occurrence/);
+      expect(d?.reason, p).toMatch(/22 real 7\.0 files/);
+    }
+    const fam = matchDeclared('FAM.SNOTE');
+    expect(fam?.reason).toMatch(/^unmapped:pending-standard-tag-gaps/);
+    expect(fam?.reason).toMatch(/\d+ occurrence/);
+    expect(fam?.reason).toMatch(/22 real 7\.0 files/);
+  });
+
   it('every reason uses a recognised prefix, so nobody can shrug in prose', () => {
     for (const d of DECLARED_UNMAPPED) {
       expect(d.reason, `unrecognised reason prefix on ${d.path}`)
