@@ -5,20 +5,24 @@
  * the shared import-core can handle both versions without branching.
  *
  * All transformations operate on the parsed GedcomNode[] tree in memory.
- * Returns the original nodes unchanged for non-7.0 versions.
+ * Returns the original nodes unchanged unless the major version is 7.
  */
 
 import type { GedcomNode } from '../../gedcom/parser';
-import type { GedcomVersion } from './detect';
+import { gedcomMajor, type GedcomVersion } from './detect';
+import { markConsumed, recordOrigin } from './tag-accounting';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-function getChildren(node: GedcomNode, tag: string): GedcomNode[] {
-  return node.children.filter(c => c.tag === tag);
-}
-
-function getChild(node: GedcomNode, tag: string): GedcomNode | undefined {
-  return node.children.find(c => c.tag === tag);
+/**
+ * Every node this module builds goes through `derive`, so marking the copy marks
+ * the parsed node it came from (`CLAUDE.md` Prime Directive (cont.) clause 1).
+ * O(1): one spread and one Map write.
+ */
+function derive(origin: GedcomNode, patch: Partial<GedcomNode>): GedcomNode {
+  const result = { ...origin, ...patch };
+  recordOrigin(result, origin);
+  return result;
 }
 
 // ── Transformation 1: SNOTE pointer → inline NOTE ───────────────────────────
@@ -31,6 +35,9 @@ function buildSnoteMap(nodes: GedcomNode[]): Map<string, string> {
   const snoteMap = new Map<string, string>();
   for (const node of nodes) {
     if (node.tag === 'SNOTE' && node.xref) {
+      // The record's text is read here. Its children (LANG, TRAN, ...) are not:
+      // they stay unmarked unless a phase reads them from the original tree.
+      markConsumed(node);
       // The parser already folds CONT into node.value via newlines
       snoteMap.set(node.xref, node.value ?? '');
     }
@@ -46,18 +53,18 @@ function inlineSnotes(node: GedcomNode, snoteMap: Map<string, string>): GedcomNo
   for (const child of node.children) {
     if (child.tag === 'SNOTE' && child.value.startsWith('@') && child.value.endsWith('@')) {
       const text = snoteMap.get(child.value) ?? '';
-      newChildren.push({
+      newChildren.push(derive(child, {
         level: child.level,
         xref: null,
         tag: 'NOTE',
         value: text,
         children: [],
-      });
+      }));
     } else {
       newChildren.push(inlineSnotes(child, snoteMap));
     }
   }
-  return { ...node, children: newChildren };
+  return derive(node, { children: newChildren });
 }
 
 // ── Transformation 2: EXID → synthetic REFN ─────────────────────────────────
@@ -71,29 +78,31 @@ function convertExidToRefn(node: GedcomNode): GedcomNode {
   const newChildren: GedcomNode[] = [];
   for (const child of node.children) {
     if (child.tag === 'EXID') {
-      const typeNode = getChild(child, 'TYPE');
+      // Plain find: getChild would mark EXID.TYPE here, before any phase reads REFN.TYPE.
+      const typeNode = child.children.find(c => c.tag === 'TYPE');
       const refnChildren: GedcomNode[] = [];
       if (typeNode) {
-        refnChildren.push({
+        refnChildren.push(derive(typeNode, {
           level: child.level + 1,
           xref: null,
           tag: 'TYPE',
           value: typeNode.value,
           children: [],
-        });
+        }));
       }
-      newChildren.push({
+      // Other EXID children are not carried. They stay unmarked and are reported.
+      newChildren.push(derive(child, {
         level: child.level,
         xref: null,
         tag: 'REFN',
         value: child.value,
         children: refnChildren,
-      });
+      }));
     } else {
       newChildren.push(child);
     }
   }
-  return { ...node, children: newChildren };
+  return derive(node, { children: newChildren });
 }
 
 // ── Transformation 3: TRAN → additional NAME node — REMOVED (T07) ──────────
@@ -113,7 +122,7 @@ function lowercaseTypeValues(node: GedcomNode): GedcomNode {
   }
   const newChildren = node.children.map(lowercaseTypeValues);
   if (newValue === node.value && newChildren === node.children) return node;
-  return { ...node, value: newValue, children: newChildren };
+  return derive(node, { value: newValue, children: newChildren });
 }
 
 // ── Transformation 5: Drop CONC nodes ───────────────────────────────────────
@@ -123,7 +132,7 @@ function dropConcNodes(node: GedcomNode): GedcomNode {
   const newChildren = node.children
     .filter(c => c.tag !== 'CONC')
     .map(dropConcNodes);
-  return { ...node, children: newChildren };
+  return derive(node, { children: newChildren });
 }
 
 // ── Transformation 6: PHRASE under DATE → date_original fallback ─────────────
@@ -135,19 +144,22 @@ function dropConcNodes(node: GedcomNode): GedcomNode {
 function applyDatePhrase(node: GedcomNode): GedcomNode {
   const newChildren: GedcomNode[] = node.children.map(child => {
     if (child.tag === 'DATE') {
-      const phraseNode = getChild(child, 'PHRASE');
+      // Plain find, not the marking getChild: a PHRASE whose text is dropped
+      // because the DATE already has a value must stay unmarked and be reported.
+      const phraseNode = child.children.find(c => c.tag === 'PHRASE');
       if (phraseNode && phraseNode.value) {
         const dateVal = child.value.trim();
         if (!dateVal || dateVal.toUpperCase() === 'UNKNOWN') {
           // Replace the DATE value with the phrase text
-          return { ...child, value: phraseNode.value };
+          markConsumed(phraseNode);
+          return derive(child, { value: phraseNode.value });
         }
       }
       return applyDatePhrase(child);
     }
     return applyDatePhrase(child);
   });
-  return { ...node, children: newChildren };
+  return derive(node, { children: newChildren });
 }
 
 // ── Transformation 7: Multiple GIVN/SURN → concatenate ──────────────────────
@@ -157,12 +169,15 @@ function applyDatePhrase(node: GedcomNode): GedcomNode {
  */
 function mergeMultipleGivnSurn(node: GedcomNode): GedcomNode {
   if (node.tag !== 'NAME') {
-    return { ...node, children: node.children.map(mergeMultipleGivnSurn) };
+    return derive(node, { children: node.children.map(mergeMultipleGivnSurn) });
   }
-  const givnNodes = getChildren(node, 'GIVN');
-  const surnNodes = getChildren(node, 'SURN');
+  // Plain filter, not the marking getChildren: marking every duplicate would mark
+  // the 2nd..nth GIVN/SURN. Only the first is carried (as the merged node), so the
+  // others stay unmarked and are reported.
+  const givnNodes = node.children.filter(c => c.tag === 'GIVN');
+  const surnNodes = node.children.filter(c => c.tag === 'SURN');
   if (givnNodes.length <= 1 && surnNodes.length <= 1) {
-    return { ...node, children: node.children.map(mergeMultipleGivnSurn) };
+    return derive(node, { children: node.children.map(mergeMultipleGivnSurn) });
   }
 
   const newChildren: GedcomNode[] = [];
@@ -171,10 +186,9 @@ function mergeMultipleGivnSurn(node: GedcomNode): GedcomNode {
   for (const child of node.children) {
     if (child.tag === 'GIVN') {
       if (!givnAdded && givnNodes.length > 1) {
-        newChildren.push({
-          ...child,
+        newChildren.push(derive(child, {
           value: givnNodes.map(g => g.value).join(' '),
-        });
+        }));
         givnAdded = true;
       } else if (givnNodes.length === 1) {
         newChildren.push(child);
@@ -182,10 +196,9 @@ function mergeMultipleGivnSurn(node: GedcomNode): GedcomNode {
       // skip duplicates
     } else if (child.tag === 'SURN') {
       if (!surnAdded && surnNodes.length > 1) {
-        newChildren.push({
-          ...child,
+        newChildren.push(derive(child, {
           value: surnNodes.map(s => s.value).join(' '),
-        });
+        }));
         surnAdded = true;
       } else if (surnNodes.length === 1) {
         newChildren.push(child);
@@ -195,17 +208,18 @@ function mergeMultipleGivnSurn(node: GedcomNode): GedcomNode {
       newChildren.push(mergeMultipleGivnSurn(child));
     }
   }
-  return { ...node, children: newChildren };
+  return derive(node, { children: newChildren });
 }
 
 // ── Public entry point ───────────────────────────────────────────────────────
 
 /**
  * Normalize a parsed GEDCOM node tree from 7.0 conventions to 5.5.1-compatible form.
- * Returns the input unchanged for non-7.0 versions.
+ * Returns the input unchanged unless the major version is 7 (semver: 7.0.x and
+ * 7.1 are compatible with 7.0, see `detect.ts`).
  */
 export function normalizeForImport(nodes: GedcomNode[], version: GedcomVersion): GedcomNode[] {
-  if (version !== '7.0') return nodes;
+  if (gedcomMajor(version) !== 7) return nodes;
 
   // 1. Build SNOTE map and remove top-level SNOTE records
   const snoteMap = buildSnoteMap(nodes);

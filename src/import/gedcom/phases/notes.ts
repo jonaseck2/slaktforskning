@@ -44,6 +44,7 @@ export async function phaseNotes(ctx: ImportContext): Promise<void> {
   const source = ctx.originalTree ?? ctx.tree;
   for (const node of source) {
     if (node.tag !== 'SNOTE' || !node.xref) continue;
+    markConsumed(node);
     const lang = node.children.find(c => c.tag === 'LANG');
     if (lang) markConsumed(lang);
     const note = await createNote(ctx.db, { text: node.value ?? '', language: lang?.value ?? '' });

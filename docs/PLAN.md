@@ -14,6 +14,10 @@ Active plan files under `docs/plans/`. Each entry links the plan and states the 
 
 Spec: [`docs/plans/2026-06-18-incomplete-date-handling-design.md`](plans/2026-06-18-incomplete-date-handling-design.md). **User goal:** a researcher can record a date at any precision and across any GEDCOM-expressible year (pre-1000, BCE), and it sorts correctly on the Timeline — year-only death after the year's dated events, burial after death; future years warn but don't block. Design lands first; implementation plan to follow.
 
+### Import accounting: what is left _(design — Part A shipped 2026-11-07)_
+
+Spec: [`docs/plans/2026-08-23-import-tag-accounting-design.md`](plans/2026-08-23-import-tag-accounting-design.md). **User goal:** a researcher importing a file from any program keeps what they wrote, including the parts this app does not understand, and sees a plain list of what was not understood. Shipped: the GEDCOM report names every node of the parsed tree, including those 7.0 normalization rewrites. **Remaining, no plan yet:** verbatim capture of unmapped nodes (`unmapped_data`), the parser malformed-line counter, the `.children` lint rule, closed-schema coverage for RootsMagic, Genney and Gramps.
+
 ---
 
 ## Considered, not now

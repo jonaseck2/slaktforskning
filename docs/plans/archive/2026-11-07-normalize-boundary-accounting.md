@@ -34,7 +34,7 @@ The spec was written 2026-08-23. These figures were re-measured on `main` at `ae
 | Claim in the spec | Measured |
 |---|---|
 | The probe loses `SNOTE.LANG` and `SNOTE.TRAN` | `SNOTE.TRAN` and `.TRAN.LANG` are lost. `SNOTE.LANG` is **read** (`phases/notes.ts:46-50` stores it as the note language), so the spec's "expected new finding `SNOTE.LANG`" is stale. |
-| Gated fixtures: 20, with 0 at GEDCOM 7.0 | 20 files. 0 reach `normalize`. `dialects/family-historian.ged` says `VERS 7.0.13`, and `detect.ts:12` matches only the exact string `7.0`, so it detects as `unknown`. |
+| Gated fixtures: 20, with 0 at GEDCOM 7.0 | 20 files. 0 reach `normalize`. (Corrected at T01: `dialects/family-historian.ged` declares `GEDC.VERS 5.5.1`. Its `7.0.13` is `SOUR.VERS`, the program's own version. No committed fixture has a `7.0.x` `GEDC.VERS`. Census of `GEDC.VERS` over the 38 real files that could be parsed: 22 `7.0`, 10 `5.5.1`, 6 `5.5`, 0 `7.0.x`.) |
 | The gate has never run with normalize active | True for CI. False for the census script. 22 of the 45 real `.ged` files say `VERS 7.0` exactly (all in `export-import/samples/familysearch-gedcom7/`). Of those 45 files, 3 carry a top-level `SNOTE`, 1 carries `TRAN`, 1 carries `EXID`, 3 carry `PHRASE`. |
 | Census: 742 paths over 36 sample files | 690 paths over 36 sample files. Later plans (dialect review, AD profile) declared the rest. |
 | Marks on original nodes match nothing | Confirmed in live output. The census reports `INDI.NAME.TRAN` and `SOUR.DATA.EVEN.PLAC.TRAN` (2 each), although `phases/translations.ts` reads both. Those are false positives from the identity split. |
@@ -62,7 +62,7 @@ Other readers outside the phases: `detect.ts` (reads `HEAD.GEDC.VERS` with raw `
 
 - **Verbatim capture (spec Part C) is out of scope.** It depends on this plan, because capture reads the same unaccounted set. Owner: a plan written from Part C after this one archives.
 - **Modelling shared-note translations is out of scope.** `SNOTE.TRAN` is declared `unmapped:pending-unmapped-capture`, the existing home for authored data awaiting capture. A `note_translations` table would be a separate plan with its own registry entries.
-- **`detect.ts` rejects `VERS 7.0.x` — in scope, fixed in T04.** A file saying `7.0.13` was never normalized, so its SNOTE pointers were not inlined. The user decided the rule (2026-11-07, semver): `7.0.x` is a backwards-compatible patch of 7.0, `7.1` is a minor that extends 7, `8` is not backwards compatible. `detectGedcomVersion` applies that rule by major and holds no list of version strings: majors 5 and 7 are supported, every other major is `'unknown'`. Before this plan only the exact strings `7.0`, `5.5`, `5.5.1` and `5.5.5` matched. **One visible change:** the import report shows the version the file declares. A `5.5` file now reads `GEDCOM 5.5`, where it read `GEDCOM 5.5.1` before. `tests/unit/gedcom-detect.test.ts` (`detects 5.5 as 5.5.1`) and `import-gedcom-reporting.test.ts:751` change with it. Tags that 7.1+ adds and the importer does not read reach the accounting report, so a minor-version extension is named and not dropped. The fix changes DB output for `family-historian.ged` and any real 7.0.1+ file. T04 records that import-output diff in its commit.
+- **`detect.ts` rejects `VERS 7.0.x` — in scope, fixed in T04.** A file whose `GEDC.VERS` says `7.0.13` would never be normalized, so its SNOTE pointers would not be inlined. No file in the committed fixtures or the real corpus does this today (0 of 38 parsed real files), so the fix is for files not yet seen and changes no existing output. The user decided the rule (2026-11-07, semver): `7.0.x` is a backwards-compatible patch of 7.0, `7.1` is a minor that extends 7, `8` is not backwards compatible. `detectGedcomVersion` applies that rule by major and holds no list of version strings: majors 5 and 7 are supported, every other major is `'unknown'`. Before this plan only the exact strings `7.0`, `5.5`, `5.5.1` and `5.5.5` matched. **One visible change:** the import report shows the version the file declares. A `5.5` file now reads `GEDCOM 5.5`, where it read `GEDCOM 5.5.1` before. `tests/unit/gedcom-detect.test.ts` (`detects 5.5 as 5.5.1`) and `import-gedcom-reporting.test.ts:751` change with it. Tags that 7.1+ adds and the importer does not read reach the accounting report, so a minor-version extension is named and not dropped. T04's tests use inline files with `VERS 7.0.13`, since no fixture carries one.
 - **Closed-schema coverage, the parser malformed-line counter and the `.children` lint rule** (spec Part A items not listed in the spec's "Part 1-3") stay unshipped. They are in the spec's reconciliation table and need their own plan.
 
 ## Verification
@@ -99,7 +99,7 @@ Other readers outside the phases: `detect.ts` (reads `HEAD.GEDC.VERS` with raw `
 
 - Modify `src/import/gedcom/tag-accounting.ts`: provenance map, `recordOrigin`, chain-following `markConsumed`.
 - Modify `src/import/gedcom/normalize.ts`: remove the private `getChild`/`getChildren`, add `derive`, record provenance in every rebuild.
-- Modify `src/import/gedcom/detect.ts`: read through `node-utils`, and treat every the declared version string, supported by major (5 and 7) per semver, and add `gedcomMajor`.
+- Modify `src/import/gedcom/detect.ts`: read through `node-utils`, return the version string the file declares, accept it by major (5 and 7) per semver, and add `gedcomMajor`.
 - Modify `src/import/gedcom/import-core.ts` (about line 452-472): open the session earlier, walk the original tree.
 - Modify `src/import/gedcom/phases/notes.ts:46-50`: mark the SNOTE record.
 - Modify `src/import/gedcom/accounting-declared.ts`: declarations.
@@ -121,9 +121,9 @@ Other readers outside the phases: `detect.ts` (reads `HEAD.GEDC.VERS` with raw `
 **Interfaces:**
 - Produces: fixture path `tests/fixtures/gedcom/gedcom7-normalize.ged`. Baseline file: `Record<fixtureRelativePath, { path: string; count: number }[]>` holding the raw `report.unaccountedFor` of the 20 pre-existing fixtures on unmodified `main`.
 
-- [ ] **Step 1: Generate the baseline before touching any source.** Write a throwaway script in the scratchpad that imports each of the 20 fixtures (same enumeration as `fixtureFiles()`) and dumps raw `unaccountedFor` to `accounting-baseline-551.json`, keys relative to `tests/fixtures/gedcom`. Do not filter declared paths. Run it on unmodified HEAD.
+- [x] **Step 1: Generate the baseline before touching any source.** Write a throwaway script in the scratchpad that imports each of the 20 fixtures (same enumeration as `fixtureFiles()`) and dumps raw `unaccountedFor` to `accounting-baseline-551.json`, keys relative to `tests/fixtures/gedcom`. Do not filter declared paths. Run it on unmodified HEAD.
 
-- [ ] **Step 2: Write the fixture.** Synthetic, `VERS 7.0` exactly. It contains, at minimum:
+- [x] **Step 2: Write the fixture.** Synthetic, `VERS 7.0` exactly. It contains, at minimum:
   - `0 @N1@ SNOTE Anteckning om Anna` with children `1 LANG sv`, `1 TRAN Note about Anna`, `2 LANG en`
   - `1 SNOTE @N1@` on an INDI, on a FAM, and `2 SNOTE @N1@` under `1 BIRT`
   - `2 TRAN Anna /Berg/` with `3 LANG en` under an INDI `NAME`
@@ -132,15 +132,15 @@ Other readers outside the phases: `detect.ts` (reads `HEAD.GEDC.VERS` with raw `
   - a `NAME` with two `GIVN` (`Anna`, `Maria`) and two `SURN`
   - `2 DATE` with a `3 PHRASE sometime in spring` child and no value, plus a second `DATE 1900` with a `PHRASE`
 
-- [ ] **Step 3: Write the failing tests** in `import-normalize-accounting.test.ts`:
+- [x] **Step 3: Write the failing tests** in `import-normalize-accounting.test.ts`:
   - `reports SNOTE.TRAN and SNOTE.TRAN.LANG and not SNOTE.LANG` (Verification 1, inline minimal file from the spec probe). Fails today.
-  - `the pre-existing 7.0.x behaviour is pinned`: `family-historian.ged` detects as `'unknown'`. Passes today. T04 flips it to `'7.0'` on purpose.
+  - `the pre-existing 7.0.x behaviour is pinned`: an inline file with `GEDC.VERS 7.0.13` detects as `'unknown'`. Passes today. T04 flips it on purpose.
   - Verification 2 in `import-tag-accounting.test.ts`: `fixtureFiles().some(f => gedcomMajor(detectGedcomVersion(parseGedcom(read(f)))) === 7)`. Fails today. (`gedcomMajor` arrives in T04, so write this one against a local `parseInt` of the declared `VERS` and switch it in T04.)
   - Verification 3: raw `unaccountedFor` per fixture equals baseline with `HEAD.GEDC` and `HEAD.GEDC.VERS` removed. Fails today (those two are still present).
 
-- [ ] **Step 4: Run and confirm red.** `npm --prefix <wt> exec -- vitest run --root <wt> tests/unit/import-normalize-accounting.test.ts tests/unit/import-tag-accounting.test.ts`. Expected: the four tests above fail, the pinned-behaviour test passes.
+- [x] **Step 4: Run and confirm red.** `npm --prefix <wt> exec -- vitest run --root <wt> tests/unit/import-normalize-accounting.test.ts tests/unit/import-tag-accounting.test.ts`. Expected: the four tests above fail, the pinned-behaviour test passes.
 
-- [ ] **Step 5: Commit** the five paths by explicit name: `test(import): a 7.0 fixture the accounting gate must reach`.
+- [x] **Step 5: Commit** the five paths by explicit name: `test(import): a 7.0 fixture the accounting gate must reach`.
 
 ### Task 2 (Tier 1): Provenance in the accounting session
 
@@ -151,17 +151,17 @@ Other readers outside the phases: `detect.ts` (reads `HEAD.GEDC.VERS` with raw `
 **Interfaces:**
 - Produces: `recordOrigin(derived: GedcomNode, origin: GedcomNode): void` and `originOf(node: GedcomNode): GedcomNode`. `recordOrigin` stores the **root** origin (`origin` resolved through its own entry), so chains never grow. Both are no-ops or identity outside a session. `markConsumed(node)` adds `node` and, when an origin exists, the origin.
 
-- [ ] **Step 1: Write the failing tests.**
+- [x] **Step 1: Write the failing tests.**
   - `marking a derived node marks its origin`.
   - `a node derived twice marks the parsed origin once` (Review Focus 2).
   - `a derived node with no recordOrigin leaves the origin unmarked` (Verification 5, the guard that can fail).
   - `recordOrigin outside a session is a no-op and does not throw`.
 
-- [ ] **Step 2: Run to confirm failure** (`recordOrigin` is not exported).
+- [x] **Step 2: Run to confirm failure** (`recordOrigin` is not exported).
 
-- [ ] **Step 3: Implement.** Provenance is a `WeakMap<GedcomNode, GedcomNode>` created in `beginAccounting` and dropped in `endAccounting`, next to `session`. One line of approach: root-collapse on write, single lookup on mark.
+- [x] **Step 3: Implement.** Provenance is a `WeakMap<GedcomNode, GedcomNode>` created in `beginAccounting` and dropped in `endAccounting`, next to `session`. One line of approach: root-collapse on write, single lookup on mark.
 
-- [ ] **Step 4: Run to confirm pass**, then commit `feat(import): accounting records which parsed node a derived node came from`.
+- [x] **Step 4: Run to confirm pass**, then commit `feat(import): accounting records which parsed node a derived node came from`.
 
 ### Task 3 (Tier 1): `normalize.ts` records provenance and plays by the marking rule
 
@@ -173,22 +173,22 @@ Other readers outside the phases: `detect.ts` (reads `HEAD.GEDC.VERS` with raw `
 - Consumes: `recordOrigin` (T02), `getChild`/`getChildren` from `./node-utils`.
 - Produces: `derive(origin: GedcomNode, patch: Partial<GedcomNode>): GedcomNode` (module-private). It builds `{ ...origin, ...patch }`, calls `recordOrigin(result, origin)`, returns it.
 
-- [ ] **Step 1: Write the failing tests.** Inside a session, normalize the T01 fixture tree. For each of the seven rows in Scope assert `originOf(derived)` is the parsed node. Add:
+- [x] **Step 1: Write the failing tests.** Inside a session, normalize the T01 fixture tree. For each of the seven rows in Scope assert `originOf(derived)` is the parsed node. Add:
   - `PHRASE is not marked when the DATE already has a value` (Review Focus 1).
   - `the second GIVN stays unmarked`.
   - `SNOTE record is marked, SNOTE.TRAN is not`.
 
-- [ ] **Step 2: Run to confirm failure.**
+- [x] **Step 2: Run to confirm failure.**
 
-- [ ] **Step 3: Implement.**
+- [x] **Step 3: Implement.**
   - Delete the private `getChildren`/`getChild` (lines 16-22). Import the marking ones.
   - Replace every `{ ...node, ... }` and every literal-node rebuild with `derive(origin, patch)`. For synthesized nodes (`NOTE` from a pointer, `REFN` from `EXID`, its `TYPE`) the origin is the node they were built from.
   - In `applyDatePhrase`, look `PHRASE` up with a plain `.find` and call `markConsumed` only on the branch that copies its text into `DATE`.
   - In `buildSnoteMap`, call `markConsumed(node)` on the SNOTE record. Do not mark its children.
 
-- [ ] **Step 4: Run** `gedcom-normalize.test.ts` and the new tests. Expected: all pass.
+- [x] **Step 4: Run** `gedcom-normalize.test.ts` and the new tests. Expected: all pass.
 
-- [ ] **Step 5: Commit** `feat(import): normalize records provenance for every node it derives`.
+- [x] **Step 5: Commit** `feat(import): normalize records provenance for every node it derives`.
 
 ### Task 4 (Tier 1): Open the session first, walk the parsed tree
 
@@ -200,48 +200,47 @@ Other readers outside the phases: `detect.ts` (reads `HEAD.GEDC.VERS` with raw `
 - Consumes: provenance-aware `markConsumed` (T02), `derive`-based `normalizeForImport` (T03).
 - Produces: unchanged `importGedcom` signature. `report.unaccountedFor` is now computed from `tree` (parsed), not `normalizedTree`.
 
-- [ ] **Step 1: Write the failing tests.**
+- [x] **Step 1: Write the failing tests.**
   - `a throwing normalize does not strand the session`: stub `normalizeForImport` to throw once, import, then import again and expect success (Review Focus 4).
   - `dangling SNOTE pointer imports without a crash` (Review Focus 3).
   - `event-level and FAM-level SNOTE pointers are marked or reported, never silent` on the T01 fixture (Review Focus 5). The assertion lists the actual outcome per path once measured. Record the measured result in the test comment.
   - `7.0 fixture: every node a phase reads is marked` (Verification 4): `unaccountedFor` on the fixture, minus the declared paths, equals the explicit list measured in step 4.
   - `detectGedcomVersion follows semver` in `import-normalize-accounting.test.ts`, table-driven on `GEDC.VERS`. A supported major returns the declared string unchanged: `7.0`, `7.0.13`, `7.1`, `7.2.3`, `5.0`, `5.5`, `5.5.1`, `5.5.5`, `5.6`. Their `gedcomMajor` is 7 or 5. Any other major returns `'unknown'`: `4.0`, `6.0`, `8.0`, `8.1.2`, `10.0`. A malformed string returns `'unknown'`: `7`, `7.`, `7.x`, `70.0`, `5.5.5.1`, empty. A table row per input, so a regression names the version.
   - `normalizeForImport` transforms for `7.0.13` and `7.1` and is a no-op for `5.5`, `5.5.5` and `unknown`.
-  - `family-historian.ged has major 7 and declared version 7.0.13` replaces the T01 pinned-behaviour test.
+  - `an inline GEDC.VERS 7.0.13 file has major 7 and declared version 7.0.13` replaces the T01 pinned-behaviour test.
 
-- [ ] **Step 2: Run to confirm failure.**
+- [x] **Step 2: Run to confirm failure.**
 
-- [ ] **Step 3: Implement.**
+- [x] **Step 3: Implement.**
   - `import-core.ts`: call `beginAccounting()` first, inside the `try` that already ends in `finally { endAccounting() }`, so `detectGedcomVersion` and `normalizeForImport` run inside the session. Compute `collectUnaccounted(tree, …)` on the parsed `tree`.
   - `detect.ts`: replace the three raw `.find` calls with `getChild` from `./node-utils`. Delete the per-version comparisons. `detectGedcomVersion` returns the version string the file declares, trimmed, when it parses as `major.minor[.patch]` and the major is in one `SUPPORTED_MAJORS = new Set([5, 7])` constant. Otherwise it returns `'unknown'`. `GedcomVersion` becomes `string`, with `'unknown'` as the only sentinel. Export `gedcomMajor(v: GedcomVersion): number | null`. Behaviour keys on the major, never on a version label: `normalizeForImport` runs its transformations when `gedcomMajor(version) === 7`. The import report then shows the declared version (`GEDCOM 7.0.13`, `GEDCOM 5.5`), not a label the app invented. Add a comment citing the semver rule: same major is compatible, a new major is not. Adding major 8 later is one number in `SUPPORTED_MAJORS`, plus the transformations its spec needs.
   - Compatibility check before editing: grep `src/` and `tests/` for every comparison against `'5.5.1'`, `'5.5.5'` and `'7.0'` on a detected version (not on the exporter's `version` option, which is the format the user picks). Update each to `gedcomMajor`. Paste the grep output into the T04 commit.
-  - Update the T01 baseline expectation for `dialects/family-historian.ged`. It now normalizes, so its raw `unaccountedFor` differs from the pinned baseline. Verification 3 compares the other 19 fixtures to the baseline and compares this one to a new pinned list taken after the fix.
-  - Import `family-historian.ged` before and after the `detect.ts` change. Paste the row-count diff per table into the T04 commit message.
+  - Verification 3 compares all 20 pre-existing fixtures to the baseline. None changes version class: `family-historian.ged` declares `GEDC.VERS 5.5.1`.
   - `notes.ts`: `markConsumed(node)` for the SNOTE record in the loop at line 46.
 
-- [ ] **Step 4: Run the whole accounting suite** and read the fixture's unaccounted list. Expected new paths: `SNOTE.TRAN`, `SNOTE.TRAN.LANG`, `INDI.EXID._SRC`, plus whatever the FAM and event pointers show. Paste the list into the T05 commit.
+- [x] **Step 4: Run the whole accounting suite** and read the fixture's unaccounted list. Expected new paths: `SNOTE.TRAN`, `SNOTE.TRAN.LANG`, `INDI.EXID._SRC`, plus whatever the FAM and event pointers show. Paste the list into the T05 commit.
 
-- [ ] **Step 5: Commit** `fix(import): account for the parsed tree, with the session open before normalize`.
+- [x] **Step 5: Commit** `fix(import): account for the parsed tree, with the session open before normalize`.
 
 ### Task 5 (Tier 2): Settle the declarations and re-measure the census
 
 **Files:**
 - Modify: `src/import/gedcom/accounting-declared.ts` (lines about 35-40), `tests/unit/import-tag-accounting-declared.test.ts`
 
-- [ ] **Step 1: Write the failing declaration tests.**
+- [x] **Step 1: Write the failing declaration tests.**
   - `HEAD.GEDC` and `HEAD.GEDC.VERS` are not declared and the gate is green without them (Verification 6).
   - `HEAD.CHAR` reason matches `/consumed before parsing/`.
   - `*.NAME.GIVN` and `*.NAME.SURN` reasons do not contain `folded into the NAME value`.
   - `SNOTE.TRAN` and `SNOTE.TRAN.LANG` match `/^unmapped:pending-unmapped-capture/` and carry `\d+ occurrence` (counts from the 7.0 samples, measured in T04).
 
-- [ ] **Step 2: Run to confirm failure.**
+- [x] **Step 2: Run to confirm failure.**
 
-- [ ] **Step 3: Edit the list.** Delete the two `HEAD.GEDC*` entries. Reword the three reasons. Add the `SNOTE.TRAN*` and `EXID` extra-field entries measured in T04. Each new reason states the occurrence count and the denominator (files with 7.0).
+- [x] **Step 3: Edit the list.** Delete the two `HEAD.GEDC*` entries. Reword the three reasons. Add the `SNOTE.TRAN*` and `EXID` extra-field entries measured in T04. Each new reason states the occurrence count and the denominator (files with 7.0).
 
-- [ ] **Step 4: Run the census.** `npx tsx scripts/accounting-over-samples.ts export-import/samples --out <scratchpad>/census-after.txt`. Compare with the 690-path baseline measured 2026-11-07. Expected: `INDI.NAME.TRAN` and `SOUR.DATA.EVEN.PLAC.TRAN` gone. Paste both path counts. Any new undeclared path on a real 7.0 sample gets a declaration with a reason or a filed follow-up. It does not stay silent.
+- [x] **Step 4: Run the census.** `npx tsx scripts/accounting-over-samples.ts export-import/samples --out <scratchpad>/census-after.txt`. Compare with the 690-path baseline measured 2026-11-07. Expected: `INDI.NAME.TRAN` and `SOUR.DATA.EVEN.PLAC.TRAN` gone. Paste both path counts. Any new undeclared path on a real 7.0 sample gets a declaration with a reason or a filed follow-up. It does not stay silent.
 
-- [ ] **Step 5: Commit** `docs(import): declarations follow the accounting that now reaches normalize`.
+- [x] **Step 5: Commit** `docs(import): declarations follow the accounting that now reaches normalize`.
 
 ### Task 6 (Tier 1): Close-out
 
-- [ ] **T-final (Tier 1)** — Invoke `/close-out` skill. The skill walks the 6+1 steps, refuses partial, captures evidence. Required evidence: `npm test` summary, `npm run build` tail, `npm run test:e2e:full` across 8 projects, and both census path counts from T05. Also paste the T04 `family-historian.ged` before/after row counts.
+- [x] **T-final (Tier 1)** — Invoke `/close-out` skill. The skill walks the 6+1 steps, refuses partial, captures evidence. Required evidence: `npm test` summary, `npm run build` tail, `npm run test:e2e:full` across 8 projects, and both census path counts from T05.

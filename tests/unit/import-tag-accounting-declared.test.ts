@@ -1,7 +1,7 @@
 // The declared-unmapped list is how a tag stops being a silent drop and becomes
 // a decision. See docs/plans/2026-08-23-importer-tag-accounting.md Task 5.
 
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { DECLARED_UNMAPPED, matchDeclared } from '../../src/import/gedcom/accounting-declared';
@@ -102,6 +102,110 @@ describe('declared unmapped tags', () => {
   it('the tags Task 2 mapped are no longer declared', () => {
     expect(matchDeclared('FAM._DOMESTIC_PARTNERSHIP')).toBeUndefined();
     expect(matchDeclared('FAM._DOMESTIC_PARTNERSHIP.DATE')).toBeUndefined();
+  });
+
+  // ── normalize-boundary accounting, Task 5 ─────────────────────────────────
+  // detect.ts marks HEAD.GEDC and HEAD.GEDC.VERS inside the session now, so
+  // declaring them as "read before the session" would be a false statement.
+  it('HEAD.GEDC and HEAD.GEDC.VERS are read, not declared', () => {
+    expect(matchDeclared('HEAD.GEDC')).toBeUndefined();
+    expect(matchDeclared('HEAD.GEDC.VERS')).toBeUndefined();
+    expect(matchDeclared('HEAD.GEDC.FORM')).toBeDefined();
+  });
+
+  it('HEAD.CHAR says it is consumed before parsing', () => {
+    expect(matchDeclared('HEAD.CHAR')?.reason).toMatch(/consumed before parsing/);
+  });
+
+  it('NAME.GIVN and NAME.SURN no longer claim normalize folds them into the NAME value', () => {
+    for (const p of ['INDI.NAME.GIVN', 'INDI.NAME.SURN']) {
+      const reason = matchDeclared(p)?.reason ?? '';
+      expect(reason, p).not.toContain('folded into the NAME value');
+      expect(reason, p).toContain('mergeMultipleGivnSurn');
+    }
+  });
+
+  it('the 7.0 gaps are declared with their measured count and denominator', () => {
+    for (const p of ['SNOTE.TRAN', 'SNOTE.TRAN.LANG', 'INDI.EXID._SRC', 'INDI.DEAT.DATE.PHRASE']) {
+      const d = matchDeclared(p);
+      expect(d?.reason, p).toMatch(/^unmapped:pending-unmapped-capture/);
+      expect(d?.reason, p).toMatch(/\d+ occurrence/);
+      expect(d?.reason, p).toMatch(/22 real 7\.0 files/);
+    }
+    const fam = matchDeclared('FAM.SNOTE');
+    expect(fam?.reason).toMatch(/^unmapped:pending-standard-tag-gaps/);
+    expect(fam?.reason).toMatch(/\d+ occurrence/);
+    expect(fam?.reason).toMatch(/22 real 7\.0 files/);
+  });
+
+  // ── Verification 7: the SNOTE paths the parsed-tree gate names on the real 7.0 samples
+  // [path, occurrences, files, prefix]. Measured 2026-11-07 over the 22 files in
+  // export-import/samples/familysearch-gedcom7.
+  const SNOTE_PATHS: Array<[string, number, number, RegExp]> = [
+    ['FAM.ASSO.SNOTE', 1, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['FAM.NO.SNOTE', 1, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['INDI.DEAT.SNOTE', 1, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['INDI.FAMS.SNOTE', 1, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['INDI.NAME.SNOTE', 2, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['INDI.NO.SNOTE', 1, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['OBJE.SOUR.SNOTE', 1, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['SOUR.DATA.EVEN.PLAC.SNOTE', 1, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['SOUR.DATA.SNOTE', 1, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['SOUR.REPO.SNOTE', 1, 1, /^unmapped:pending-standard-tag-gaps/],
+    ['SUBM.SNOTE', 2, 2, /^unmapped:pending-standard-tag-gaps/],
+    ['FAM.SLGS.SNOTE', 1, 1, /^excluded:not-relevant/],
+    ['INDI.SLGC.SNOTE', 1, 1, /^excluded:not-relevant/],
+    ['SNOTE.CREA', 1, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.CREA.DATE', 1, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.CREA.DATE.TIME', 1, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.EXID', 2, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.EXID.TYPE', 2, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.MIME', 1, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.REFN', 2, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.REFN.TYPE', 2, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.SOUR', 3, 2, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.SOUR.PAGE', 2, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.TRAN.MIME', 2, 1, /^unmapped:pending-unmapped-capture/],
+    ['SNOTE.UID', 2, 1, /^unmapped:pending-unmapped-capture/],
+  ];
+
+  it.each(SNOTE_PATHS)('%s is declared with its measured count and denominator', (path, occ, files, prefix) => {
+    const reason = matchDeclared(path)?.reason;
+    expect(reason, `${path} is undeclared`).toBeDefined();
+    expect(reason!).toMatch(prefix);
+    expect(reason!).toContain(`${occ} occurrence${occ === 1 ? '' : 's'} across ${files} of 22 real 7.0 files`);
+  });
+
+  it('every pending-standard-tag-gaps SNOTE host entry is listed in the plan text', () => {
+    const plan = readFileSync(join(__dirname, '../../docs/plans/2026-08-28-standard-tag-gaps.md'), 'utf-8');
+    const t04 = plan.slice(plan.indexOf('### T04'), plan.indexOf('### T05'));
+    const hosts = DECLARED_UNMAPPED.filter(d =>
+      d.path.endsWith('.SNOTE') && d.reason.startsWith('unmapped:pending-standard-tag-gaps'));
+    expect(hosts.length).toBe(12);
+    for (const d of hosts) {
+      const host = d.path.slice(0, -'.SNOTE'.length);
+      expect(d.reason, d.path).toContain('T04');
+      expect(d.reason, d.path).not.toContain('Not verified');
+      expect(t04.includes(`\`${host}\``), `${host} is not listed in T04 of the plan`).toBe(true);
+    }
+  });
+
+  it('a DATE PHRASE is declared under any parent, with the census count over the real 7.0 samples', () => {
+    expect(matchDeclared('INDI.DEAT.DATE.PHRASE')?.path).toBe('*.DATE.PHRASE');
+    expect(matchDeclared('FAM.MARR.DATE.PHRASE')?.path).toBe('*.DATE.PHRASE');
+    const reason = matchDeclared('INDI.DEAT.DATE.PHRASE')?.reason ?? '';
+    expect(reason).toMatch(/^unmapped:pending-unmapped-capture/);
+    expect(reason).toContain('9 occurrences across 8 paths in 2 of 22 real 7.0 files');
+    // SDATE.PHRASE is a different tag and stays undeclared.
+    expect(matchDeclared('INDI.DEAT.SDATE.PHRASE')).toBeUndefined();
+  });
+
+  it('NAME.GIVN and NAME.SURN reasons do not claim the merged text survives', () => {
+    for (const p of ['INDI.NAME.GIVN', 'INDI.NAME.SURN']) {
+      const reason = matchDeclared(p)?.reason ?? '';
+      expect(reason, p).not.toContain('survives in the merged value');
+      expect(reason, p).toContain('No importer phase reads');
+    }
   });
 
   it('every reason uses a recognised prefix, so nobody can shrug in prose', () => {

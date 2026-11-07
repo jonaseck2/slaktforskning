@@ -11,6 +11,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
 import { matchDeclared } from '../../src/import/gedcom/accounting-declared';
+import { detectGedcomVersion, gedcomMajor } from '../../src/import/gedcom/detect';
 import { queryAll } from '../../src/api/db';
 import { createTestDb, readDialect } from './helpers';
 
@@ -175,6 +176,13 @@ describe('every shipped fixture is fully accounted for', () => {
     const files = fixtureFiles();
     expect(files.length, 'fixture enumeration found nothing').toBeGreaterThanOrEqual(19);
     expect(files.some(f => f.endsWith('arkivdigital.ged'))).toBe(true);
+  });
+
+  // Verification 2: the gate reaches normalize. At least one gated fixture must
+  // be GEDCOM 7, or normalize.ts is never exercised by this suite.
+  it('the corpus contains a GEDCOM 7 fixture, so the gate reaches normalize', () => {
+    const major = (file: string) => gedcomMajor(detectGedcomVersion(parseGedcom(readFileSync(file, 'utf-8'))));
+    expect(fixtureFiles().some(f => major(f) === 7)).toBe(true);
   });
 
   for (const file of fixtureFiles()) {

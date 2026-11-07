@@ -8,9 +8,11 @@ describe('detectGedcomVersion', () => {
     expect(detectGedcomVersion(nodes)).toBe('5.5.1');
   });
 
-  it('detects 5.5 as 5.5.1', () => {
+  // Semver by major (plan 2026-11-07-normalize-boundary-accounting T04): the
+  // declared string is returned as-is. Before T04 a 5.5 file was relabelled 5.5.1.
+  it('detects 5.5 as the declared 5.5', () => {
     const nodes = parseGedcom('0 HEAD\n1 GEDC\n2 VERS 5.5\n0 TRLR');
-    expect(detectGedcomVersion(nodes)).toBe('5.5.1');
+    expect(detectGedcomVersion(nodes)).toBe('5.5');
   });
 
   it('detects 5.5.5', () => {

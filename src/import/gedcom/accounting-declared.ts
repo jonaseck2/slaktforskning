@@ -27,16 +27,21 @@ export interface DeclaredUnmapped {
   reason: string;
 }
 
+/**
+ * Shared wording for the shared-note pointer hosts that no phase reads a note from.
+ * docs/plans/2026-08-28-standard-tag-gaps.md T04 lists all 12 of them explicitly,
+ * and a test asserts each declared host path appears in that text.
+ */
+const SNOTE_HOST_T04 =
+  ' Listed as a host in docs/plans/2026-08-28-standard-tag-gaps.md T04, which wires notes on hosts no phase reads. Remove this entry when T04 lands.';
+
 export const DECLARED_UNMAPPED: DeclaredUnmapped[] = [
-  // ── Structure and pre-session reads ──────────────────────────────────────
-  // These are consumed, just not by a phase inside the accounting session.
+  // ── Structure ────────────────────────────────────────────────────────────
   { path: 'TRLR',           reason: 'excluded:structural — end-of-file marker, carries no value' },
-  { path: 'HEAD.GEDC',      reason: 'excluded:structural — version envelope, read by detect.ts before the session opens' },
-  { path: 'HEAD.GEDC.VERS', reason: 'excluded:structural — read by detect.ts before the session opens' },
   { path: 'HEAD.GEDC.FORM', reason: 'excluded:structural — always LINEAGE-LINKED in 5.5.1' },
-  { path: 'HEAD.CHAR',      reason: 'excluded:structural — character set, applied at decode time before parsing' },
-  { path: '*.NAME.GIVN',    reason: 'excluded:redundant — folded into the NAME value by normalize.ts before the session; individuals.ts parses the NAME value' },
-  { path: '*.NAME.SURN',    reason: 'excluded:redundant — folded into the NAME value by normalize.ts before the session' },
+  { path: 'HEAD.CHAR',      reason: 'excluded:structural — character set, consumed before parsing: the decoder applies it at decode time, before a tree exists' },
+  { path: '*.NAME.GIVN',    reason: 'excluded:redundant — individuals.ts parses the NAME value, so a single GIVN is read by nobody. When a NAME has several GIVN, normalize.ts (mergeMultipleGivnSurn) merges their text into the first one and the later duplicates stay unmarked and are reported. The duplicates\' text is carried in the merged first GIVN node. No importer phase reads GIVN (the only reader under src/import/gedcom is normalize.ts), so that text persists only through the NAME value individuals.ts parses, and only if that value carries it' },
+  { path: '*.NAME.SURN',    reason: 'excluded:redundant — individuals.ts parses the NAME value, so a single SURN is read by nobody. When a NAME has several SURN, normalize.ts (mergeMultipleGivnSurn) merges their text into the first one and the later duplicates stay unmarked and are reported. The duplicates\' text is carried in the merged first SURN node. No importer phase reads SURN (the only reader under src/import/gedcom is normalize.ts), so that text persists only through the NAME value individuals.ts parses, and only if that value carries it' },
   { path: 'INDI.FAMS',      reason: 'excluded:redundant — the couple link is read from the FAM record HUSB/WIFE' },
   { path: 'INDI.FAMC',      reason: 'excluded:redundant — the parent link is read from the FAM record CHIL' },
 
@@ -53,6 +58,42 @@ export const DECLARED_UNMAPPED: DeclaredUnmapped[] = [
   { path: '*.NOTE._TITLE', reason: 'unmapped:pending-unmapped-capture — a label on a NOTE. The notes table has text and language, no label column, and ~20 occurrences across four real exports do not warrant one. Verbatim capture makes it non-destructive without modelling it.' },
   { path: '*._TAG', reason: 'unmapped:pending-unmapped-capture — a label on a NOTE. The notes table has text and language, no label column, and ~20 occurrences across four real exports do not warrant one. Verbatim capture makes it non-destructive without modelling it.' },
   { path: '*._TAG.TYPE', reason: 'unmapped:pending-unmapped-capture — a label on a NOTE. The notes table has text and language, no label column, and ~20 occurrences across four real exports do not warrant one. Verbatim capture makes it non-destructive without modelling it.' },
+
+  // ── GEDCOM 7.0 gaps surfaced once accounting reached the parsed tree ─────
+  // Counts measured 2026-11-07 with scripts/accounting-over-samples.ts over
+  // export-import/samples/familysearch-gedcom7: 22 .ged files, all VERS 7.0.
+  { path: 'SNOTE.TRAN',          reason: 'unmapped:pending-unmapped-capture — translation of a shared note\'s text, 2 occurrences across 1 of 22 real 7.0 files (maximal70.ged). `notes` holds one text and one language per note and has no translation rows, so modelling it is a table. Verbatim capture keeps it non-destructive without one.' },
+  { path: 'SNOTE.TRAN.LANG',     reason: 'unmapped:pending-unmapped-capture — language of a shared-note translation, 2 occurrences across 1 of 22 real 7.0 files (maximal70.ged). Same missing translation storage as SNOTE.TRAN.' },
+  { path: 'INDI.EXID._SRC',      reason: 'unmapped:pending-unmapped-capture — extra field on an external identifier. convertExidToRefn keeps the value and TYPE as REFN and drops the other children. 0 occurrences across the 22 real 7.0 files; fixture-only (gedcom7-normalize.ged).' },
+  { path: '*.DATE.PHRASE', reason: 'unmapped:pending-unmapped-capture — an authored phrase beside a DATE. applyDatePhrase uses the phrase only when the DATE is empty and drops it when the DATE has a value, on any parent. Census over export-import/samples/familysearch-gedcom7: 9 occurrences across 8 paths in 2 of 22 real 7.0 files (SOUR.DATA.EVEN.DATE.PHRASE 2, and 1 each under _LOC, FAM.MARR, FAM.NO, FAM.SLGS, INDI.NO, INDI.SLGC, OBJE.SOUR.DATA). The count does not separate a dropped phrase from a phrase under a host whose DATE no phase reads. Also seen in the fixture at INDI.DEAT.DATE (gedcom7-normalize.ged).' },
+  { path: 'FAM.SNOTE',           reason: 'unmapped:pending-standard-tag-gaps — shared-note pointer on a family. phaseNoteLinks reads pointers on INDI, SOUR, REPO and OBJE only, so the NOTE normalize.ts inlines from it is read by no phase. 1 occurrence across 1 of 22 real 7.0 files (maximal70.ged).' + SNOTE_HOST_T04 },
+
+  // Same census: every path below sits under a shared note or on a shared-note pointer.
+  { path: 'FAM.ASSO.SNOTE', reason: 'unmapped:pending-standard-tag-gaps — shared-note pointer on a host no phase reads a note from, 1 occurrence across 1 of 22 real 7.0 files. normalize.ts inlines it as a NOTE and no phase reads that NOTE.' + SNOTE_HOST_T04 },
+  { path: 'FAM.NO.SNOTE', reason: 'unmapped:pending-standard-tag-gaps — shared-note pointer on a host no phase reads a note from, 1 occurrence across 1 of 22 real 7.0 files. normalize.ts inlines it as a NOTE and no phase reads that NOTE.' + SNOTE_HOST_T04 },
+  { path: 'INDI.DEAT.SNOTE', reason: 'unmapped:pending-standard-tag-gaps — shared-note pointer on a host no phase reads a note from, 1 occurrence across 1 of 22 real 7.0 files. normalize.ts inlines it as a NOTE and no phase reads that NOTE.' + SNOTE_HOST_T04 },
+  { path: 'INDI.FAMS.SNOTE', reason: 'unmapped:pending-standard-tag-gaps — shared-note pointer on a host no phase reads a note from, 1 occurrence across 1 of 22 real 7.0 files. normalize.ts inlines it as a NOTE and no phase reads that NOTE.' + SNOTE_HOST_T04 },
+  { path: 'INDI.NAME.SNOTE', reason: 'unmapped:pending-standard-tag-gaps — shared-note pointer on a host no phase reads a note from, 2 occurrences across 1 of 22 real 7.0 files. normalize.ts inlines it as a NOTE and no phase reads that NOTE.' + SNOTE_HOST_T04 },
+  { path: 'INDI.NO.SNOTE', reason: 'unmapped:pending-standard-tag-gaps — shared-note pointer on a host no phase reads a note from, 1 occurrence across 1 of 22 real 7.0 files. normalize.ts inlines it as a NOTE and no phase reads that NOTE.' + SNOTE_HOST_T04 },
+  { path: 'OBJE.SOUR.SNOTE', reason: 'unmapped:pending-standard-tag-gaps — shared-note pointer on a host no phase reads a note from, 1 occurrence across 1 of 22 real 7.0 files. normalize.ts inlines it as a NOTE and no phase reads that NOTE.' + SNOTE_HOST_T04 },
+  { path: 'SOUR.DATA.EVEN.PLAC.SNOTE', reason: 'unmapped:pending-standard-tag-gaps — shared-note pointer on a host no phase reads a note from, 1 occurrence across 1 of 22 real 7.0 files. normalize.ts inlines it as a NOTE and no phase reads that NOTE.' + SNOTE_HOST_T04 },
+  { path: 'SOUR.DATA.SNOTE', reason: 'unmapped:pending-standard-tag-gaps — shared-note pointer on a host no phase reads a note from, 1 occurrence across 1 of 22 real 7.0 files. normalize.ts inlines it as a NOTE and no phase reads that NOTE.' + SNOTE_HOST_T04 },
+  { path: 'SOUR.REPO.SNOTE', reason: 'unmapped:pending-standard-tag-gaps — shared-note pointer on a host no phase reads a note from, 1 occurrence across 1 of 22 real 7.0 files. normalize.ts inlines it as a NOTE and no phase reads that NOTE.' + SNOTE_HOST_T04 },
+  { path: 'SUBM.SNOTE', reason: 'unmapped:pending-standard-tag-gaps — shared-note pointer on a host no phase reads a note from, 2 occurrences across 2 of 22 real 7.0 files. normalize.ts inlines it as a NOTE and no phase reads that NOTE.' + SNOTE_HOST_T04 },
+  { path: 'FAM.SLGS.SNOTE', reason: 'excluded:not-relevant — shared-note pointer on an LDS ordinance, 1 occurrence across 1 of 22 real 7.0 files. The importer discards LDS ordinances on purpose, as the other LDS entries below declare.' },
+  { path: 'INDI.SLGC.SNOTE', reason: 'excluded:not-relevant — shared-note pointer on an LDS ordinance, 1 occurrence across 1 of 22 real 7.0 files. The importer discards LDS ordinances on purpose, as the other LDS entries below declare.' },
+  { path: 'SNOTE.CREA', reason: 'unmapped:pending-unmapped-capture — creation record of a shared note, 1 occurrence across 1 of 22 real 7.0 files. `notes` holds text and language only, so there is no column for it. Verbatim capture keeps it non-destructive without modelling it.' },
+  { path: 'SNOTE.CREA.DATE', reason: 'unmapped:pending-unmapped-capture — date the shared note was created, 1 occurrence across 1 of 22 real 7.0 files. `notes` holds text and language only, so there is no column for it. Verbatim capture keeps it non-destructive without modelling it.' },
+  { path: 'SNOTE.CREA.DATE.TIME', reason: 'unmapped:pending-unmapped-capture — clock time the shared note was created, 1 occurrence across 1 of 22 real 7.0 files. `notes` holds text and language only, so there is no column for it. Verbatim capture keeps it non-destructive without modelling it.' },
+  { path: 'SNOTE.EXID', reason: 'unmapped:pending-unmapped-capture — external identifier of a shared note, 2 occurrences across 1 of 22 real 7.0 files. `notes` holds text and language only, so there is no column for it. Verbatim capture keeps it non-destructive without modelling it.' },
+  { path: 'SNOTE.EXID.TYPE', reason: 'unmapped:pending-unmapped-capture — type of a shared-note external identifier, 2 occurrences across 1 of 22 real 7.0 files. `notes` holds text and language only, so there is no column for it. Verbatim capture keeps it non-destructive without modelling it.' },
+  { path: 'SNOTE.MIME', reason: 'unmapped:pending-unmapped-capture — media type of a shared note\'s text, 1 occurrence across 1 of 22 real 7.0 files. `notes` holds text and language only, so there is no column for it. Verbatim capture keeps it non-destructive without modelling it.' },
+  { path: 'SNOTE.REFN', reason: 'unmapped:pending-unmapped-capture — reference number of a shared note, 2 occurrences across 1 of 22 real 7.0 files. `notes` holds text and language only, so there is no column for it. Verbatim capture keeps it non-destructive without modelling it.' },
+  { path: 'SNOTE.REFN.TYPE', reason: 'unmapped:pending-unmapped-capture — type of a shared-note reference number, 2 occurrences across 1 of 22 real 7.0 files. `notes` holds text and language only, so there is no column for it. Verbatim capture keeps it non-destructive without modelling it.' },
+  { path: 'SNOTE.SOUR', reason: 'unmapped:pending-unmapped-capture — citation attached to a shared note, 3 occurrences across 2 of 22 real 7.0 files. `notes` holds text and language only, so there is no column for it. Verbatim capture keeps it non-destructive without modelling it.' },
+  { path: 'SNOTE.SOUR.PAGE', reason: 'unmapped:pending-unmapped-capture — page of a citation attached to a shared note, 2 occurrences across 1 of 22 real 7.0 files. `notes` holds text and language only, so there is no column for it. Verbatim capture keeps it non-destructive without modelling it.' },
+  { path: 'SNOTE.TRAN.MIME', reason: 'unmapped:pending-unmapped-capture — media type of a shared-note translation, 2 occurrences across 1 of 22 real 7.0 files. `notes` holds text and language only, so there is no column for it. Verbatim capture keeps it non-destructive without modelling it.' },
+  { path: 'SNOTE.UID', reason: 'unmapped:pending-unmapped-capture — unique identifier of a shared note, 2 occurrences across 1 of 22 real 7.0 files. `notes` holds text and language only, so there is no column for it. Verbatim capture keeps it non-destructive without modelling it.' },
 
   // ── HEAD metadata about the export itself, not about the family ──────────
   { path: 'HEAD.DATE',      reason: 'excluded:not-relevant — when the exporting program ran, not a fact about the tree' },

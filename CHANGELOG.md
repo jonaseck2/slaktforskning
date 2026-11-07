@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.277.0 — 2026-11-07
+
+- feat: a GEDCOM 7 import now names the shared-note translations it could not keep
+- feat: extra fields on an external identifier and repeated given names are named in the report
+- feat: GEDCOM 7.0.13, 7.1 and other 7.x files are read as GEDCOM 7, and 8 and above are not
+- fix: the import report shows the GEDCOM version written in the file, such as 5.5
+
 ## 0.276.1 — 2026-08-29
 
 - fix: deleting a source, citation, place, photograph or repository now removes its archive identifiers too, instead of leaving rows behind that made an approved duplicate group reappear on every review
@@ -63,8 +70,3 @@
 - fix: GEDCOM import accepts a .zip containing a .ged again, and files media into the database's media folder
 - test: the end-to-end suite runs the build you just made instead of whichever bundle was built last
 - test: end-to-end runs use their own throwaway database again instead of the last one you opened
-
-## 0.271.4 — 2026-08-22
-
-- chore: Pinia, Vue Router and Vue I18n updated, with security patches for bundled libraries
-- fix: the bundled third-party license list builds again after the Vue Router update
