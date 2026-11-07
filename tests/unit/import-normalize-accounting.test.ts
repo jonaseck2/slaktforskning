@@ -334,6 +334,8 @@ describe('detectGedcomVersion follows semver', () => {
   const SUPPORTED: [string, number][] = [
     ['7.0', 7], ['7.0.13', 7], ['7.1', 7], ['7.2.3', 7],
     ['5.0', 5], ['5.5', 5], ['5.5.1', 5], ['5.5.5', 5], ['5.6', 5],
+    // Leading zeros are accepted on purpose: rejecting them would skip normalize.
+    ['07.0', 7], ['5.05', 5],
   ];
   for (const [vers, major] of SUPPORTED) {
     it(`${vers} → declared string, major ${major}`, () => {
@@ -356,7 +358,11 @@ describe('detectGedcomVersion follows semver', () => {
   }
 
   it('surrounding whitespace is trimmed', () => {
-    expect(detect('  7.0.13  ')).toBe('7.0.13');
+    // Hand-built nodes: parseGedcom trims already, so it would never reach detect.ts's trim.
+    const n = (level: number, tag: string, value: string, children: GedcomNode[] = []): GedcomNode =>
+      ({ level, xref: null, tag, value, children });
+    const tree = [n(0, 'HEAD', '', [n(1, 'GEDC', '', [n(2, 'VERS', ' 7.0.13 ')])]), n(0, 'TRLR', '')];
+    expect(detectGedcomVersion(tree)).toBe('7.0.13');
   });
 });
 

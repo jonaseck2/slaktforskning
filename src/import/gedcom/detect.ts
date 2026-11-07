@@ -15,6 +15,8 @@ export type GedcomVersion = string;
  */
 const SUPPORTED_MAJORS = new Set([5, 7]);
 
+// Leading zeros (`07.0`, `5.05`) are accepted on purpose: rejecting them would make the
+// file 'unknown', skip normalize, and leave a 7.0 file's pointers uninlined.
 const VERSION_RE = /^(\d+)\.(\d+)(?:\.(\d+))?$/;
 
 function parseMajor(v: string): number | null {
