@@ -135,7 +135,7 @@ Other readers outside the phases: `detect.ts` (reads `HEAD.GEDC.VERS` with raw `
 - [ ] **Step 3: Write the failing tests** in `import-normalize-accounting.test.ts`:
   - `reports SNOTE.TRAN and SNOTE.TRAN.LANG and not SNOTE.LANG` (Verification 1, inline minimal file from the spec probe). Fails today.
   - `the pre-existing 7.0.x behaviour is pinned`: `family-historian.ged` detects as `'unknown'`. Passes today. T04 flips it to `'7.0'` on purpose.
-  - Verification 2 in `import-tag-accounting.test.ts`: `fixtureFiles().some(f => detectGedcomVersion(parseGedcom(read(f))) === '7.0')`. Fails today.
+  - Verification 2 in `import-tag-accounting.test.ts`: `fixtureFiles().some(f => gedcomMajor(detectGedcomVersion(parseGedcom(read(f)))) === 7)`. Fails today. (`gedcomMajor` arrives in T04, so write this one against a local `parseInt` of the declared `VERS` and switch it in T04.)
   - Verification 3: raw `unaccountedFor` per fixture equals baseline with `HEAD.GEDC` and `HEAD.GEDC.VERS` removed. Fails today (those two are still present).
 
 - [ ] **Step 4: Run and confirm red.** `npm --prefix <wt> exec -- vitest run --root <wt> tests/unit/import-normalize-accounting.test.ts tests/unit/import-tag-accounting.test.ts`. Expected: the four tests above fail, the pinned-behaviour test passes.
@@ -207,7 +207,7 @@ Other readers outside the phases: `detect.ts` (reads `HEAD.GEDC.VERS` with raw `
   - `7.0 fixture: every node a phase reads is marked` (Verification 4): `unaccountedFor` on the fixture, minus the declared paths, equals the explicit list measured in step 4.
   - `detectGedcomVersion follows semver` in `import-normalize-accounting.test.ts`, table-driven on `GEDC.VERS`. A supported major returns the declared string unchanged: `7.0`, `7.0.13`, `7.1`, `7.2.3`, `5.0`, `5.5`, `5.5.1`, `5.5.5`, `5.6`. Their `gedcomMajor` is 7 or 5. Any other major returns `'unknown'`: `4.0`, `6.0`, `8.0`, `8.1.2`, `10.0`. A malformed string returns `'unknown'`: `7`, `7.`, `7.x`, `70.0`, `5.5.5.1`, empty. A table row per input, so a regression names the version.
   - `normalizeForImport` transforms for `7.0.13` and `7.1` and is a no-op for `5.5`, `5.5.5` and `unknown`.
-  - `family-historian.ged detects as 7.0` replaces the T01 pinned-behaviour test.
+  - `family-historian.ged has major 7 and declared version 7.0.13` replaces the T01 pinned-behaviour test.
 
 - [ ] **Step 2: Run to confirm failure.**
 
