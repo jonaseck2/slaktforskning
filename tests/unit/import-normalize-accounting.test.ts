@@ -18,6 +18,7 @@ import {
   originOf,
 } from '../../src/import/gedcom/tag-accounting';
 import { detectGedcomVersion } from '../../src/import/gedcom/detect';
+import { normalizeForImport } from '../../src/import/gedcom/normalize';
 import { createTestDb } from './helpers';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
@@ -74,6 +75,139 @@ describe('normalize-boundary accounting', () => {
       expect(actual).toEqual(expected.filter(e => !NOW_READ.has(e.path)));
     });
   }
+});
+
+// T03: normalize.ts records provenance for every node it derives. The import
+// session still opens after normalize (T04 moves it), so these tests open their own.
+describe('normalize records provenance', () => {
+  const parsed = () => parseGedcom(readFileSync(join(FIXTURES, 'gedcom7-normalize.ged'), 'utf-8'));
+  const kid = (n: GedcomNode, tag: string, i = 0): GedcomNode => {
+    const found = n.children.filter(c => c.tag === tag)[i];
+    if (!found) throw new Error(`no ${tag}[${i}] under ${n.tag}`);
+    return found;
+  };
+  const rec = (nodes: GedcomNode[], xref: string): GedcomNode => {
+    const found = nodes.find(n => n.xref === xref);
+    if (!found) throw new Error(`no record ${xref}`);
+    return found;
+  };
+  const walk = (nodes: GedcomNode[], out: GedcomNode[] = []): GedcomNode[] => {
+    for (const n of nodes) { out.push(n); walk(n.children, out); }
+    return out;
+  };
+
+  /** Normalizes inside a session. Origins are read before the session closes. */
+  function run(check: (src: GedcomNode[], out: GedcomNode[]) => void): Set<GedcomNode> {
+    const src = parsed();
+    let consumed!: Set<GedcomNode>;
+    beginAccounting();
+    try {
+      check(src, normalizeForImport(src, '7.0'));
+    } finally {
+      consumed = endAccounting();
+    }
+    return consumed;
+  }
+
+  it('every node in the normalized tree traces to a parsed node', () => {
+    run((src, out) => {
+      const parsedSet = new Set(walk(src));
+      const orphans = walk(out).filter(n => !parsedSet.has(originOf(n))).map(n => n.tag);
+      expect(orphans).toEqual([]);
+    });
+  });
+
+  it('row 1b: an inlined NOTE comes from its SNOTE pointer (INDI, event and FAM level)', () => {
+    run((src, out) => {
+      const i1 = rec(src, '@I1@');
+      const o1 = rec(out, '@I1@');
+      expect(originOf(kid(o1, 'NOTE'))).toBe(kid(i1, 'SNOTE'));
+      expect(originOf(kid(kid(o1, 'BIRT'), 'NOTE'))).toBe(kid(kid(i1, 'BIRT'), 'SNOTE'));
+      expect(originOf(kid(rec(out, '@F1@'), 'NOTE'))).toBe(kid(rec(src, '@F1@'), 'SNOTE'));
+    });
+  });
+
+  it('row 2: REFN comes from EXID and its TYPE from the EXID TYPE', () => {
+    run((src, out) => {
+      const exid = kid(rec(src, '@I1@'), 'EXID');
+      const refn = kid(rec(out, '@I1@'), 'REFN');
+      expect(originOf(refn)).toBe(exid);
+      expect(originOf(kid(refn, 'TYPE'))).toBe(kid(exid, 'TYPE'));
+    });
+  });
+
+  it('rows 4-6: spread copies trace to their origin', () => {
+    run((src, out) => {
+      const i1 = rec(src, '@I1@');
+      const o1 = rec(out, '@I1@');
+      expect(originOf(o1)).toBe(i1);
+      expect(originOf(kid(o1, 'SEX'))).toBe(kid(i1, 'SEX'));
+      const birtDate = kid(kid(o1, 'BIRT'), 'DATE');
+      expect(birtDate.value).toBe('sometime in spring');
+      expect(originOf(birtDate)).toBe(kid(kid(i1, 'BIRT'), 'DATE'));
+      expect(originOf(kid(kid(o1, 'DEAT'), 'DATE'))).toBe(kid(kid(i1, 'DEAT'), 'DATE'));
+    });
+  });
+
+  it('row 4: a lowercased TYPE value traces to its origin', () => {
+    const src = parseGedcom('0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @I1@ INDI\n1 FAMC @F1@\n2 PEDI BIRTH\n0 TRLR');
+    beginAccounting();
+    try {
+      const pedi = kid(kid(rec(normalizeForImport(src, '7.0'), '@I1@'), 'FAMC'), 'PEDI');
+      expect(pedi.value).toBe('birth');
+      expect(originOf(pedi)).toBe(kid(kid(rec(src, '@I1@'), 'FAMC'), 'PEDI'));
+    } finally {
+      endAccounting();
+    }
+  });
+
+  it('row 7: the merged GIVN and SURN come from the first duplicate', () => {
+    run((src, out) => {
+      const name = kid(rec(src, '@I1@'), 'NAME');
+      const outName = kid(rec(out, '@I1@'), 'NAME');
+      expect(kid(outName, 'GIVN').value).toBe('Anna Maria');
+      expect(originOf(kid(outName, 'GIVN'))).toBe(kid(name, 'GIVN', 0));
+      expect(originOf(kid(outName, 'SURN'))).toBe(kid(name, 'SURN', 0));
+    });
+  });
+
+  it('PHRASE is not marked when the DATE already has a value', () => {
+    let phrase!: GedcomNode;
+    let used!: GedcomNode;
+    const consumed = run(src => {
+      const i1 = rec(src, '@I1@');
+      phrase = kid(kid(kid(i1, 'DEAT'), 'DATE'), 'PHRASE');
+      used = kid(kid(kid(i1, 'BIRT'), 'DATE'), 'PHRASE');
+    });
+    expect(consumed.has(phrase), 'DEAT.DATE.PHRASE was dropped, so it must be reported').toBe(false);
+    expect(consumed.has(used), 'BIRT.DATE.PHRASE replaced the empty value, so it was read').toBe(true);
+  });
+
+  it('the second GIVN stays unmarked', () => {
+    let second!: GedcomNode;
+    let secondSurn!: GedcomNode;
+    const consumed = run(src => {
+      const name = kid(rec(src, '@I1@'), 'NAME');
+      second = kid(name, 'GIVN', 1);
+      secondSurn = kid(name, 'SURN', 1);
+    });
+    expect(consumed.has(second)).toBe(false);
+    expect(consumed.has(secondSurn)).toBe(false);
+  });
+
+  it('SNOTE record is marked, SNOTE.TRAN is not', () => {
+    let snote!: GedcomNode;
+    const consumed = run(src => { snote = rec(src, '@N1@'); });
+    expect(consumed.has(snote)).toBe(true);
+    expect(consumed.has(kid(snote, 'TRAN'))).toBe(false);
+    expect(consumed.has(kid(kid(snote, 'TRAN'), 'LANG'))).toBe(false);
+  });
+
+  it('EXID children the REFN does not carry stay unmarked', () => {
+    let extra!: GedcomNode;
+    const consumed = run(src => { extra = kid(kid(rec(src, '@I1@'), 'EXID'), '_SRC'); });
+    expect(consumed.has(extra)).toBe(false);
+  });
 });
 
 describe('accounting provenance', () => {
