@@ -190,6 +190,16 @@ describe('declared unmapped tags', () => {
     }
   });
 
+  it('a DATE PHRASE is declared under any parent, with the census count over the real 7.0 samples', () => {
+    expect(matchDeclared('INDI.DEAT.DATE.PHRASE')?.path).toBe('*.DATE.PHRASE');
+    expect(matchDeclared('FAM.MARR.DATE.PHRASE')?.path).toBe('*.DATE.PHRASE');
+    const reason = matchDeclared('INDI.DEAT.DATE.PHRASE')?.reason ?? '';
+    expect(reason).toMatch(/^unmapped:pending-unmapped-capture/);
+    expect(reason).toContain('9 occurrences across 8 paths in 2 of 22 real 7.0 files');
+    // SDATE.PHRASE is a different tag and stays undeclared.
+    expect(matchDeclared('INDI.DEAT.SDATE.PHRASE')).toBeUndefined();
+  });
+
   it('NAME.GIVN and NAME.SURN reasons do not claim the merged text survives', () => {
     for (const p of ['INDI.NAME.GIVN', 'INDI.NAME.SURN']) {
       const reason = matchDeclared(p)?.reason ?? '';
